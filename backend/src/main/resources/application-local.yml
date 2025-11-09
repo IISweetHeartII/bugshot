@@ -1,0 +1,7 @@
+# 로컬 개발 환경 설정
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update  # 로컬: 엔티티 변경 시 자동 반영
+    show-sql: true  # 로컬: SQL 로그 활성화

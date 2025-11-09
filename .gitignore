@@ -1,0 +1,82 @@
+# ========================================
+# Frontend (Next.js)
+# ========================================
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env*.local
+frontend/.vercel
+frontend/.turbo
+frontend/.swc/
+
+# ========================================
+# Backend (Spring Boot)
+# ========================================
+backend/build/
+backend/.gradle/
+backend/bin/
+backend/out/
+backend/.env
+backend/.env.local
+
+# Gradle wrapper (keep it)
+!backend/gradle/wrapper/gradle-wrapper.jar
+
+# ========================================
+# Database
+# ========================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ========================================
+# IDE
+# ========================================
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# ========================================
+# OS
+# ========================================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ========================================
+# Logs
+# ========================================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================================
+# Environment Variables
+# ========================================
+.env
+.env.local
+.env.production
+.env*.local
+
+# ========================================
+# Docker
+# ========================================
+docker-data/
+
+# ========================================
+# Misc
+# ========================================
+.cache/
+*.pid
+*.seed
+*.pid.lock
