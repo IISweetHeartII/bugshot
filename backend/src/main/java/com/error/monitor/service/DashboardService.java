@@ -6,6 +6,7 @@ import com.error.monitor.domain.error.Error;
 import com.error.monitor.domain.error.ErrorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,16 +29,16 @@ public class DashboardService {
 
     /**
      * 프로젝트 통계 조회
+     * - Redis 캐싱 적용 (10분)
      */
+    @Cacheable(value = "dashboardStats", key = "#projectId + ':' + #period")
     @Transactional(readOnly = true)
     public DashboardStatsResponse getProjectStats(String projectId, String period) {
         LocalDateTime startTime = getStartTime(period);
         LocalDateTime now = LocalDateTime.now();
 
-        List<Error> allErrors = errorRepository.findByProjectId(projectId);
-        List<Error> periodErrors = allErrors.stream()
-                .filter(e -> e.getFirstSeenAt().isAfter(startTime))
-                .toList();
+        // Fetch all errors for the project (without pagination for stats)
+        List<Error> allErrors = errorRepository.findRecentErrors(projectId, startTime.minusYears(10));
 
         // 총 에러 발생 건수 (occurrence count 합산)
         long totalErrors = allErrors.stream()
@@ -55,11 +56,10 @@ public class DashboardService {
                 .filter(e -> e.getLastSeenAt().isAfter(todayStart))
                 .count();
 
-        // 영향받은 사용자 수
+        // 영향받은 사용자 수 (affectedUsersCount 합산)
         long affectedUsers = allErrors.stream()
-                .flatMap(e -> e.getAffectedUsers().stream())
-                .distinct()
-                .count();
+                .mapToLong(Error::getAffectedUsersCount)
+                .sum();
 
         // 심각도별 에러 수
         Map<Error.Severity, Long> severityMap = allErrors.stream()
@@ -91,13 +91,15 @@ public class DashboardService {
 
     /**
      * 에러 트렌드 조회 (시간대별)
+     * - Redis 캐싱 적용 (10분)
      */
+    @Cacheable(value = "errorTrends", key = "#projectId + ':' + #period")
     @Transactional(readOnly = true)
     public List<ErrorTrendResponse> getErrorTrends(String projectId, String period) {
         LocalDateTime startTime = getStartTime(period);
         LocalDateTime now = LocalDateTime.now();
 
-        List<Error> errors = errorRepository.findByProjectId(projectId);
+        List<Error> errors = errorRepository.findRecentErrors(projectId, startTime);
 
         // 기간에 따라 시간 단위 결정 (1일: 시간별, 7일: 일별, 30일: 일별)
         ChronoUnit unit = period.equals("1d") ? ChronoUnit.HOURS : ChronoUnit.DAYS;
@@ -114,9 +116,8 @@ public class DashboardService {
 
             long userCount = errors.stream()
                     .filter(e -> e.getLastSeenAt().isAfter(intervalStart) && e.getLastSeenAt().isBefore(intervalEnd))
-                    .flatMap(e -> e.getAffectedUsers().stream())
-                    .distinct()
-                    .count();
+                    .mapToLong(Error::getAffectedUsersCount)
+                    .sum();
 
             trends.add(ErrorTrendResponse.builder()
                     .timestamp(intervalStart)

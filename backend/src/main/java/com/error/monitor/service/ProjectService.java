@@ -10,6 +10,8 @@ import com.error.monitor.domain.user.User;
 import com.error.monitor.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ public class ProjectService {
     private final UserRepository userRepository;
     private final ErrorRepository errorRepository;
 
+    @CacheEvict(value = "userProjects", key = "#userId")
     @Transactional
     public ProjectResponse createProject(String userId, ProjectRequest request) {
         User user = userRepository.findById(userId)
@@ -52,6 +55,7 @@ public class ProjectService {
         return ProjectResponse.from(project);
     }
 
+    @Cacheable(value = "userProjects", key = "#userId")
     @Transactional(readOnly = true)
     public List<ProjectResponse> getUserProjects(String userId) {
         List<Project> projects = projectRepository.findByUserId(userId);
@@ -72,6 +76,7 @@ public class ProjectService {
             .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "project", key = "#userId + ':' + #projectId")
     @Transactional(readOnly = true)
     public ProjectResponse getProject(String userId, String projectId) {
         Project project = projectRepository.findByUserIdAndProjectId(userId, projectId)
