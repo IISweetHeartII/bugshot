@@ -4,12 +4,15 @@ import com.error.monitor.domain.error.Error;
 import com.error.monitor.domain.error.ErrorRepository;
 import com.error.monitor.domain.project.Project;
 import com.error.monitor.domain.project.ProjectRepository;
+import com.error.monitor.service.SessionReplayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
@@ -23,6 +26,12 @@ public class DiscordCommandHandler extends ListenerAdapter {
 
     private final ErrorRepository errorRepository;
     private final ProjectRepository projectRepository;
+
+    @Autowired(required = false)
+    private SessionReplayService sessionReplayService;
+
+    @Value("${app.frontend.base-url}")
+    private String frontendBaseUrl;
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
@@ -211,9 +220,48 @@ public class DiscordCommandHandler extends ListenerAdapter {
             return;
         }
 
-        // TODO: 실제 세션 리플레이 URL 가져오기
-        String replayUrl = "https://errorwatch.io/replays/" + errorId;
+        try {
+            // SessionReplayService가 없으면 기본 URL 반환
+            if (sessionReplayService == null) {
+                String replayUrl = frontendBaseUrl + "/replays/" + errorId;
+                event.reply("🎬 세션 리플레이: " + replayUrl).queue();
+                return;
+            }
 
-        event.reply("🎬 세션 리플레이: " + replayUrl).queue();
+            // 실제 세션 리플레이 조회
+            var replay = sessionReplayService.getSessionReplay(errorId);
+
+            // Pre-signed URL 생성 (24시간 유효)
+            String downloadUrl = sessionReplayService.generateDownloadUrl(errorId, 86400);
+
+            EmbedBuilder embed = new EmbedBuilder()
+                .setTitle("🎬 세션 리플레이")
+                .setColor(new Color(0x5865F2))
+                .addField("에러 ID", errorId, true)
+                .addField("녹화 시간", replay.getRecordedAt().toString(), true)
+                .addField("재생 길이", replay.getDuration() + "초", true)
+                .addField("파일 크기", formatFileSize(replay.getSize()), true)
+                .addField("브라우저", replay.getUserInfo().getBrowser() != null ? replay.getUserInfo().getBrowser() : "N/A", true)
+                .addField("OS", replay.getUserInfo().getOs() != null ? replay.getUserInfo().getOs() : "N/A", true)
+                .addField("프론트엔드에서 보기", frontendBaseUrl + "/replays/" + errorId, false)
+                .addField("다운로드 링크", "[여기를 클릭하세요](" + downloadUrl + ")\n(24시간 유효)", false)
+                .setTimestamp(Instant.now())
+                .setFooter("ErrorWatch", null);
+
+            event.replyEmbeds(embed.build()).queue();
+
+        } catch (IllegalArgumentException e) {
+            event.reply("❌ 해당 에러에 대한 세션 리플레이를 찾을 수 없습니다.").setEphemeral(true).queue();
+            log.warn("Session replay not found for error: {}", errorId);
+        } catch (Exception e) {
+            log.error("Failed to fetch session replay for error: " + errorId, e);
+            event.reply("세션 리플레이 조회 중 문제가 발생했습니다.").setEphemeral(true).queue();
+        }
+    }
+
+    private String formatFileSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
     }
 }

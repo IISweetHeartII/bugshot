@@ -9,6 +9,7 @@ import com.error.monitor.domain.project.Project;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -27,6 +28,12 @@ public class NotificationService {
 
     @Autowired(required = false)
     private DiscordBotService discordBotService;
+
+    @Autowired(required = false)
+    private EmailNotificationService emailNotificationService;
+
+    @Value("${app.frontend.base-url}")
+    private String frontendBaseUrl;
 
     @Async
     public void notifyError(Project project, Error error, ErrorOccurrence occurrence) {
@@ -56,6 +63,7 @@ public class NotificationService {
         switch (channel.getChannelType()) {
             case DISCORD -> sendDiscordNotification(channel, project, error, occurrence);
             case SLACK -> sendSlackNotification(channel, project, error, occurrence);
+            case EMAIL -> sendEmailNotification(channel, project, error, occurrence);
             case WEBHOOK -> sendWebhookNotification(channel, project, error, occurrence);
             default -> log.warn("Unsupported channel type: {}", channel.getChannelType());
         }
@@ -81,8 +89,8 @@ public class NotificationService {
                     error.getOccurrenceCount(),
                     error.getAffectedUsersCount(),
                     occurrence.getUrl(),
-                    "https://errorwatch.io/errors/" + error.getId(), // TODO: Use actual frontend URL
-                    null // TODO: Add replay URL if available
+                    frontendBaseUrl + "/errors/" + error.getId(),
+                    occurrence.getSessionId() != null ? frontendBaseUrl + "/replays/" + occurrence.getSessionId() : null
                 );
 
                 discordBotService.sendErrorNotification(channelId, data);
@@ -229,6 +237,30 @@ public class NotificationService {
             case MEDIUM -> "good";
             case LOW -> "#99AAB5";
         };
+    }
+
+    private void sendEmailNotification(NotificationChannel channel,
+                                        Project project,
+                                        Error error,
+                                        ErrorOccurrence occurrence) {
+        if (emailNotificationService == null) {
+            log.warn("EmailNotificationService is not available");
+            return;
+        }
+
+        String recipientEmail = (String) channel.getConfig().get("email");
+        if (recipientEmail == null || recipientEmail.isBlank()) {
+            log.warn("Email recipient is missing in notification channel config");
+            return;
+        }
+
+        try {
+            emailNotificationService.sendErrorNotification(recipientEmail, project, error, occurrence);
+            log.info("Email notification sent successfully to: {}", recipientEmail);
+        } catch (Exception e) {
+            log.error("Failed to send email notification", e);
+            throw e;
+        }
     }
 
     private String formatLocation(Error error) {
