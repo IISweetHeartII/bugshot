@@ -10,15 +10,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 @Service
@@ -140,12 +143,12 @@ public class SessionReplayService {
         return com.error.monitor.api.replay.dto.SessionReplayResponse.builder()
                 .errorId(errorId)
                 .replayUrl(replay.getReplayDataUrl())
-                .size(replay.getFileSizeBytes())
-                .recordedAt(replay.getCreatedAt())
-                .duration(replay.getDurationMs() / 1000) // convert ms to seconds
+                .size(replay.getFileSizeBytes() != null ? replay.getFileSizeBytes().longValue() : 0L)
+                .recordedAt(replay.getRecordedAt())
+                .duration(replay.getDurationMs() != null ? replay.getDurationMs() / 1000 : 0) // convert ms to seconds
                 .userInfo(com.error.monitor.api.replay.dto.SessionReplayResponse.UserInfo.builder()
-                        .userId(occurrence.getUserId())
-                        .ip(occurrence.getUserIp())
+                        .userId(occurrence.getUserIdentifier())
+                        .ip(occurrence.getIpAddress())
                         .userAgent(occurrence.getUserAgent())
                         .browser(occurrence.getBrowser())
                         .os(occurrence.getOs())
@@ -195,6 +198,74 @@ public class SessionReplayService {
         } catch (Exception e) {
             log.error("Failed to generate pre-signed URL for key: {}", s3Key, e);
             throw new RuntimeException("Failed to generate download URL", e);
+        }
+    }
+
+    /**
+     * 만료된 세션 리플레이를 정리하는 스케줄러
+     * - 매일 새벽 2시에 실행
+     * - 만료된 리플레이를 DB와 R2에서 모두 삭제
+     */
+    @Scheduled(cron = "0 0 2 * * *")  // 매일 02:00 실행
+    @Transactional
+    public void cleanupExpiredReplays() {
+        log.info("Starting cleanup of expired session replays");
+
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            List<SessionReplay> expiredReplays = replayRepository.findExpiredReplays(now);
+
+            if (expiredReplays.isEmpty()) {
+                log.info("No expired session replays found");
+                return;
+            }
+
+            log.info("Found {} expired session replays to delete", expiredReplays.size());
+
+            int deletedCount = 0;
+            int failedCount = 0;
+
+            for (SessionReplay replay : expiredReplays) {
+                try {
+                    // R2에서 파일 삭제
+                    deleteFromR2(replay.getReplayDataUrl());
+
+                    // DB에서 삭제
+                    replayRepository.delete(replay);
+
+                    deletedCount++;
+                } catch (Exception e) {
+                    log.error("Failed to delete replay: id={}", replay.getId(), e);
+                    failedCount++;
+                }
+            }
+
+            log.info("Session replay cleanup completed: deleted={}, failed={}", deletedCount, failedCount);
+
+        } catch (Exception e) {
+            log.error("Failed to cleanup expired session replays", e);
+        }
+    }
+
+    /**
+     * R2에서 리플레이 파일 삭제
+     */
+    private void deleteFromR2(String replayUrl) {
+        try {
+            // Extract S3 key from R2 URL (format: r2://bucket-name/key)
+            String s3Key = replayUrl.replace("r2://" + bucketName + "/", "");
+
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Key)
+                    .build();
+
+            s3Client.deleteObject(deleteRequest);
+            log.debug("Deleted replay file from R2: key={}", s3Key);
+
+        } catch (Exception e) {
+            log.error("Failed to delete from R2: url={}", replayUrl, e);
+            throw new RuntimeException("R2 deletion failed", e);
         }
     }
 }
