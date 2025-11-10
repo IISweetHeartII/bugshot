@@ -2,7 +2,7 @@ package com.error.monitor.global.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.data.Page;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.List;

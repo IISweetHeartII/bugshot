@@ -44,6 +44,7 @@ public class WebhookConfigRequest {
     /**
      * 활성화 여부
      */
+    @Builder.Default
     private boolean enabled = true;
 
     /**
