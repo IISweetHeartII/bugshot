@@ -1,0 +1,41 @@
+{
+  "name": "@errorwatch/browser-sdk",
+  "version": "1.0.0",
+  "description": "ErrorWatch Browser SDK - Real-time error monitoring and session replay",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "browser": "dist/errorwatch.min.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "jest",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "error-monitoring",
+    "error-tracking",
+    "session-replay",
+    "monitoring",
+    "errorwatch"
+  ],
+  "author": "ErrorWatch Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/errorwatch/errorwatch"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^20.11.19",
+    "rollup": "^4.12.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.3.3"
+  }
+}

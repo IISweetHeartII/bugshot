@@ -6,10 +6,10 @@ services:
     image: mysql:8.0
     container_name: error-monitor-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: error_monitor
-      MYSQL_USER: error_user
-      MYSQL_PASSWORD: error_password
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PW}
     ports:
       - "3306:3306"
     volumes:
@@ -19,25 +19,41 @@ services:
       timeout: 20s
       retries: 10
 
-  # Spring Boot 백엔드 (개발용)
+  # Spring Boot 백엔드
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: error-monitor-backend
     ports:
-      - "8080:8080"
+      - "8081:8081"  # 8081 포트 사용 (8080은 다른 프로젝트)
     environment:
-      SPRING_PROFILES_ACTIVE: local
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8081
       DB_URL: jdbc:mysql://mysql:3306/error_monitor
-      DB_USER: error_user
-      DB_PW: error_password
+      DB_USER: ${DB_USER}
+      DB_PW: ${DB_PW}
+      # Cloudflare R2 설정 (GitHub Secrets에서 주입)
+      CLOUDFLARE_R2_ACCOUNT_ID: ${CLOUDFLARE_R2_ACCOUNT_ID:-}
+      CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET:-error-monitor-replays}
+      CLOUDFLARE_R2_ACCESS_KEY: ${CLOUDFLARE_R2_ACCESS_KEY:-}
+      CLOUDFLARE_R2_SECRET_KEY: ${CLOUDFLARE_R2_SECRET_KEY:-}
+      # Discord Bot
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      # OAuth2
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-this-in-production}
     depends_on:
       mysql:
         condition: service_healthy
     volumes:
       - ./backend:/app
     command: ./gradlew bootRun
+    restart: unless-stopped
 
 volumes:
   mysql_data:

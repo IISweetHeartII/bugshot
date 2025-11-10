@@ -1,22 +1,26 @@
-export default function Home() {
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+
+export default function HomePage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (session) {
+      router.push("/dashboard");
+    } else {
+      router.push("/login");
+    }
+  }, [session, status, router]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="text-center">
-        <h1 className="text-6xl font-bold text-gray-900 mb-4">
-          Error Monitor
-        </h1>
-        <p className="text-xl text-gray-600 mb-8">
-          다국어 지원 에러 모니터링 서비스
-        </p>
-        <div className="space-x-4">
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-            시작하기
-          </button>
-          <button className="px-6 py-3 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition">
-            문서 보기
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-bg-tertiary flex items-center justify-center">
+      <div className="text-text-secondary">리다이렉트 중...</div>
     </div>
   );
 }

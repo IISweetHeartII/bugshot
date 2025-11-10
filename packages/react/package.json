@@ -1,0 +1,37 @@
+{
+  "name": "@errorwatch/react",
+  "version": "1.0.0",
+  "description": "ErrorWatch React integration",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  },
+  "keywords": [
+    "errorwatch",
+    "react",
+    "error-boundary",
+    "error-tracking"
+  ],
+  "author": "ErrorWatch Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "@errorwatch/browser-sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/react": "^18.2.56",
+    "react": "^18.2.0",
+    "rollup": "^4.12.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  }
+}

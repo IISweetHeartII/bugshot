@@ -11,7 +11,19 @@
   "dependencies": {
     "next": "^15.0.0",
     "react": "^19.0.0-rc",
-    "react-dom": "^19.0.0-rc"
+    "react-dom": "^19.0.0-rc",
+    "next-auth": "^5.0.0-beta.4",
+    "axios": "^1.6.0",
+    "date-fns": "^3.0.0",
+    "lucide-react": "^0.460.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.1.0",
+    "framer-motion": "^11.11.17",
+    "sonner": "^1.7.1",
+    "class-variance-authority": "^0.7.1",
+    "@radix-ui/react-dialog": "^1.1.2",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",

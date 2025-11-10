@@ -11,20 +11,47 @@ spring:
     url: ${DB_URL:jdbc:mysql://localhost:3306/error_monitor}
     username: ${DB_USER:root}
     password: ${DB_PW:password}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
 
   jpa:
     database: mysql
     database-platform: org.hibernate.dialect.MySQLDialect
     show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: update  # JPA가 자동으로 테이블 생성/수정
     properties:
       hibernate:
         format_sql: true
+        use_sql_comments: true
 
-# Server Port
+  # Flyway 비활성화 (JPA만 사용)
+  flyway:
+    enabled: false
+
+  # Security OAuth2
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID:your-client-id}
+            client-secret: ${GITHUB_CLIENT_SECRET:your-client-secret}
+            scope:
+              - user:email
+              - read:user
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-client-secret}
+            scope:
+              - email
+              - profile
+
+# Server Port (8081 - 8080은 다른 프로젝트에서 사용 중)
 server:
-  port: 8080
+  port: ${SERVER_PORT:8081}
 
 # Actuator 설정
 management:
@@ -36,3 +63,27 @@ management:
   endpoint:
     health:
       show-details: always
+
+# 커스텀 설정
+app:
+  # Discord Bot
+  discord:
+    bot-token: ${DISCORD_BOT_TOKEN:}
+
+  # Cloudflare R2 (S3 Compatible Storage - 무료 10GB + 무제한 Egress!)
+  cloudflare:
+    r2:
+      account-id: ${CLOUDFLARE_R2_ACCOUNT_ID:}
+      bucket-name: ${CLOUDFLARE_R2_BUCKET:error-monitor-replays}
+      access-key: ${CLOUDFLARE_R2_ACCESS_KEY:}
+      secret-key: ${CLOUDFLARE_R2_SECRET_KEY:}
+
+  # JWT
+  jwt:
+    secret: ${JWT_SECRET:your-secret-key-change-this-in-production}
+    expiration: 86400000  # 24 hours
+
+  # Session Replay
+  session-replay:
+    max-file-size: 10485760  # 10MB
+    retention-days: 30

@@ -24,6 +24,7 @@ error-monitor/
 ## 🚀 빠른 시작
 
 ### 전체 요구사항
+
 - Java 21
 - Node.js 18+
 - MySQL 8.0 (또는 Docker)
@@ -40,13 +41,14 @@ cd backend
 
 # 프론트엔드 실행 (로컬)
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ### 방법 2: 로컬 실행
 
 #### 백엔드
+
 ```bash
 cd backend
 
@@ -60,14 +62,15 @@ export DB_PW=your_password
 ```
 
 #### 프론트엔드
+
 ```bash
 cd frontend
 
 # 의존성 설치
-npm install
+pnpm install
 
 # 개발 서버 실행
-npm run dev
+pnpm run dev
 ```
 
 ## 📝 접속 URL
@@ -79,12 +82,14 @@ npm run dev
 ## 🛠️ 기술 스택
 
 ### Frontend
+
 - **Framework**: Next.js 15
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Features**: App Router, Turbopack
 
 ### Backend
+
 - **Framework**: Spring Boot 3.5.6
 - **Language**: Java 21
 - **Database**: MySQL 8.0
@@ -94,6 +99,7 @@ npm run dev
 ## 📂 개발 가이드
 
 ### 백엔드 구조
+
 ```
 backend/src/main/java/com/error/monitor/
 ├── ErrorMonitorApplication.java
@@ -108,6 +114,7 @@ backend/src/main/java/com/error/monitor/
 ```
 
 ### 프론트엔드 구조
+
 ```
 frontend/
 ├── app/
@@ -121,6 +128,7 @@ frontend/
 ## 🔧 환경 변수
 
 ### Backend (.env 또는 환경변수)
+
 ```env
 DB_URL=jdbc:mysql://localhost:3306/error_monitor
 DB_USER=root
@@ -129,6 +137,7 @@ SPRING_PROFILES_ACTIVE=local
 ```
 
 ### Frontend (.env.local)
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8080
 ```

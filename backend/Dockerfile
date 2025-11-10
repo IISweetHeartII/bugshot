@@ -15,8 +15,8 @@ COPY src src
 # Make gradlew executable
 RUN chmod +x gradlew
 
-# Expose port
-EXPOSE 8080
+# Expose port (8081 - 8080은 다른 프로젝트에서 사용 중)
+EXPOSE 8081
 
 # Run the application
 CMD ["./gradlew", "bootRun"]

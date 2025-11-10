@@ -1,20 +1,28 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
+import { ToasterProvider } from "@/components/providers/toaster-provider";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Error Monitor - 에러 모니터링 서비스",
-  description: "다국어 지원 에러 모니터링 서비스",
+  title: "ErrorWatch - 실시간 에러 모니터링",
+  description: "Discord 통합, 세션 리플레이가 포함된 강력한 에러 모니터링 서비스",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.Node;
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="ko">
-      <body className="antialiased">
-        {children}
+      <body className={inter.className}>
+        <Providers>
+          {children}
+          <ToasterProvider />
+        </Providers>
       </body>
     </html>
   );
