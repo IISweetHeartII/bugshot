@@ -1,6 +1,6 @@
 spring:
   application:
-    name: "error-monitor"
+    name: "bugshot"
 
   # 프로파일 설정 (기본값: local)
   profiles:
@@ -21,7 +21,7 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
     show-sql: true
     hibernate:
-      ddl-auto: update  # JPA가 자동으로 테이블 생성/수정
+      ddl-auto: update # JPA가 자동으로 테이블 생성/수정
     properties:
       hibernate:
         format_sql: true
@@ -64,7 +64,7 @@ spring:
   cache:
     type: redis
     redis:
-      time-to-live: 600000  # 10 minutes in milliseconds
+      time-to-live: 600000 # 10 minutes in milliseconds
       cache-null-values: false
       use-key-prefix: true
       key-prefix: "errorwatch:"
@@ -121,16 +121,16 @@ app:
   cloudflare:
     r2:
       account-id: ${CLOUDFLARE_R2_ACCOUNT_ID:}
-      bucket-name: ${CLOUDFLARE_R2_BUCKET:error-monitor-replays}
+      bucket-name: ${CLOUDFLARE_R2_BUCKET:bugshot-replays}
       access-key: ${CLOUDFLARE_R2_ACCESS_KEY:}
       secret-key: ${CLOUDFLARE_R2_SECRET_KEY:}
 
   # JWT
   jwt:
     secret: ${JWT_SECRET:your-secret-key-change-this-in-production}
-    expiration: 86400000  # 24 hours
+    expiration: 86400000 # 24 hours
 
   # Session Replay
   session-replay:
-    max-file-size: 10485760  # 10MB
+    max-file-size: 10485760 # 10MB
     retention-days: 30

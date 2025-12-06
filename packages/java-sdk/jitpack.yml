@@ -1,0 +1,11 @@
+# JitPack 빌드 설정
+jdk:
+  - openjdk11
+
+# 빌드 전 실행할 명령어 (필요시)
+before_install:
+  - chmod +x gradlew
+
+# 빌드 명령어
+install:
+  - ./gradlew clean build publishToMavenLocal -x test

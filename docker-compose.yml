@@ -1,59 +1,127 @@
 version: '3.8'
 
+# ============================================
+# Bugshot - 에러 모니터링 서비스
+# ============================================
+# 포트: MySQL 3307, Redis 6380, Backend 8081
+# (기존 UMC 프로젝트와 충돌 방지)
+
 services:
   # MySQL 데이터베이스
   mysql:
     image: mysql:8.0
-    container_name: error-monitor-mysql
+    container_name: bugshot-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: error_monitor
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PW}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: bugshot
+      MYSQL_USER: ${DB_USER:?DB_USER is required}
+      MYSQL_PASSWORD: ${DB_PW:?DB_PW is required}
+      TZ: Asia/Seoul
     ports:
-      - "3306:3306"
+      - "3307:3306"  # 외부 3307 (기존 MySQL 3306과 충돌 방지)
     volumes:
-      - mysql_data:/var/lib/mysql
+      - bugshot-mysql-data:/var/lib/mysql
+    networks:
+      - bugshot-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 캐시
+  redis:
+    image: redis:7-alpine
+    container_name: bugshot-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"  # 외부 6380 (기존 Redis와 충돌 방지)
+    volumes:
+      - bugshot-redis-data:/data
+    networks:
+      - bugshot-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Spring Boot 백엔드
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: error-monitor-backend
-    ports:
-      - "8081:8081"  # 8081 포트 사용 (8080은 다른 프로젝트)
+    container_name: bugshot-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      # Spring 설정
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SERVER_PORT: 8081
-      DB_URL: jdbc:mysql://mysql:3306/error_monitor
-      DB_USER: ${DB_USER}
-      DB_PW: ${DB_PW}
-      # Cloudflare R2 설정 (GitHub Secrets에서 주입)
+
+      # Database (Docker 내부 네트워크)
+      DB_URL: jdbc:mysql://mysql:3306/bugshot?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      DB_USER: ${DB_USER:?DB_USER is required}
+      DB_PW: ${DB_PW:?DB_PW is required}
+
+      # Redis (Docker 내부 네트워크)
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # Frontend URL
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://bugshot.log8.kr}
+
+      # Cloudflare R2 (세션 리플레이 저장소)
       CLOUDFLARE_R2_ACCOUNT_ID: ${CLOUDFLARE_R2_ACCOUNT_ID:-}
-      CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET:-error-monitor-replays}
+      CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET:-bugshot-replays}
       CLOUDFLARE_R2_ACCESS_KEY: ${CLOUDFLARE_R2_ACCESS_KEY:-}
       CLOUDFLARE_R2_SECRET_KEY: ${CLOUDFLARE_R2_SECRET_KEY:-}
+
       # Discord Bot
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+
       # OAuth2
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+
       # JWT
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-this-in-production}
-    depends_on:
-      mysql:
-        condition: service_healthy
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+
+      # Email
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+
+      # JVM 옵션
+      JAVA_OPTS: -Xms512m -Xmx1024m
+    ports:
+      - "8081:8081"
     volumes:
-      - ./backend:/app
-    command: ./gradlew bootRun
+      - bugshot-logs:/app/logs  # 로그 파일 영구 저장
+    networks:
+      - bugshot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     restart: unless-stopped
 
 volumes:
-  mysql_data:
+  bugshot-mysql-data:
+    driver: local
+  bugshot-redis-data:
+    driver: local
+  bugshot-logs:
+    driver: local
+
+networks:
+  bugshot-network:
+    driver: bridge

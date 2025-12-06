@@ -2,12 +2,12 @@
 # 이 파일을 /etc/cloudflared/config.yml로 복사하여 사용하세요
 #
 # 설정 방법:
-# 1. Cloudflare Tunnel 생성: cloudflared tunnel create error-monitor-api
+# 1. Cloudflare Tunnel 생성: cloudflared tunnel create bugshot-api
 # 2. Tunnel ID를 credentials-file 경로에 반영
-# 3. DNS 라우팅 설정: cloudflared tunnel route dns error-monitor-api api.yourdomain.com
+# 3. DNS 라우팅 설정: cloudflared tunnel route dns bugshot-api api.yourdomain.com
 
 # Tunnel 이름 (생성 시 지정한 이름)
-tunnel: error-monitor-api
+tunnel: bugshot-api
 
 # Credentials 파일 경로 (Tunnel 생성 시 자동 생성됨)
 # 예: /etc/cloudflared/[TUNNEL-ID].json
@@ -16,17 +16,16 @@ credentials-file: /etc/cloudflared/YOUR-TUNNEL-ID.json
 # Ingress 규칙 (라우팅 설정)
 ingress:
   # 백엔드 API
-  - hostname: api.error-monitor.yourdomain.com
+  - hostname: api.bugshot.yourdomain.com
     service: http://localhost:8081
     originRequest:
-      noTLSVerify: true  # 로컬 HTTP 허용
+      noTLSVerify: true # 로컬 HTTP 허용
 
   # Catch-all rule (필수)
   - service: http_status:404
 
 # 로그 설정
 loglevel: info
-
 # 기타 설정
 # retries: 5
 # grace-period: 30s

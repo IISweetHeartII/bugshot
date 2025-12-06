@@ -61,27 +61,32 @@
 ### 2.1 필수 계정
 
 ✅ **Cloudflare 계정** (무료)
+
 - R2 Storage (세션 리플레이 저장)
 - Tunnel (HTTPS 터널링)
 - DNS 관리 (도메인 연결)
 
 ✅ **Vercel 계정** (무료 Hobby 플랜)
+
 - 프론트엔드 배포
 - 자동 빌드 & 배포
 
 ✅ **도메인** (선택, 권장)
+
 - Cloudflare에서 구매 또는 기존 도메인 이전
 - 예: `errorwatch.com`
 
 ### 2.2 Mac Mini 사양
 
 최소 사양:
+
 - Mac Mini M1 이상
 - RAM 8GB 이상
 - Storage 256GB 이상
 - macOS Monterey 이상
 
 설치 필요:
+
 ```bash
 # Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -121,6 +126,7 @@ brew install git
 4. **Create API Token** 클릭
 
 **중요: 아래 정보를 안전하게 저장하세요!**
+
 ```
 Access Key ID: xxxxxxxxxxxxxxxxxxxxx
 Secret Access Key: yyyyyyyyyyyyyyyyyyyyyyyyyyyyy
@@ -148,7 +154,7 @@ Account ID: zzzzzzzzzzzzzzzzzzzzzzzzzzz
 프로젝트 루트에서:
 
 ```bash
-cd C:/projects/error-monitor
+cd C:/projects/bugshot
 cp .env.example .env
 ```
 
@@ -207,6 +213,7 @@ DISCORD_BOT_TOKEN=your_discord_bot_token
 ```
 
 **보안 팁:**
+
 - 비밀번호는 최소 16자 이상, 특수문자 포함
 - JWT_SECRET은 최소 32자 이상의 랜덤 문자열
 - `.env` 파일은 절대 Git에 커밋하지 마세요!
@@ -228,8 +235,8 @@ openssl rand -base64 32
 # SSH로 Mac Mini 접속 또는 직접 작업
 mkdir -p ~/projects
 cd ~/projects
-git clone https://github.com/YOUR-USERNAME/error-monitor.git
-cd error-monitor
+git clone https://github.com/YOUR-USERNAME/bugshot.git
+cd bugshot
 ```
 
 ### 5.2 환경 변수 복사
@@ -238,7 +245,7 @@ cd error-monitor
 
 ```bash
 # 로컬에서 Mac Mini로 전송 (SCP)
-scp .env your-username@mac-mini-ip:~/projects/error-monitor/
+scp .env your-username@mac-mini-ip:~/projects/bugshot/
 
 # 또는 Mac Mini에서 직접 작성
 nano .env
@@ -248,7 +255,7 @@ nano .env
 ### 5.3 Docker Compose로 실행
 
 ```bash
-cd ~/projects/error-monitor
+cd ~/projects/bugshot
 
 # Docker Compose로 빌드 & 실행
 docker-compose up --build -d
@@ -268,13 +275,15 @@ curl http://localhost:8081/actuator/health
 ```
 
 예상 응답:
+
 ```json
-{"status":"UP"}
+{ "status": "UP" }
 ```
 
 ### 5.5 재시작 시 자동 실행 설정
 
 Docker Desktop 설정:
+
 1. Docker Desktop 실행
 2. **Settings** → **General**
 3. ✅ **Start Docker Desktop when you log in** 체크
@@ -282,6 +291,7 @@ Docker Desktop 설정:
 또는 LaunchDaemon으로 설정:
 
 `~/Library/LaunchAgents/com.errorwatch.docker.plist`:
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -293,19 +303,20 @@ Docker Desktop 설정:
     <array>
         <string>/usr/local/bin/docker-compose</string>
         <string>-f</string>
-        <string>/Users/your-username/projects/error-monitor/docker-compose.yml</string>
+        <string>/Users/your-username/projects/bugshot/docker-compose.yml</string>
         <string>up</string>
         <string>-d</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>WorkingDirectory</key>
-    <string>/Users/your-username/projects/error-monitor</string>
+    <string>/Users/your-username/projects/bugshot</string>
 </dict>
 </plist>
 ```
 
 로드:
+
 ```bash
 launchctl load ~/Library/LaunchAgents/com.errorwatch.docker.plist
 ```
@@ -328,6 +339,7 @@ cloudflared tunnel login
 ```
 
 브라우저가 열리면:
+
 1. 로그인
 2. 도메인 선택 (예: `errorwatch.com`)
 3. **Authorize** 클릭
@@ -341,6 +353,7 @@ cloudflared tunnel create errorwatch-api
 ```
 
 출력 예시:
+
 ```
 Created tunnel errorwatch-api with id c8020eea-444c-41eb-85c8-302e025fe1cd
 ```
@@ -367,6 +380,7 @@ ingress:
 ```
 
 **주의:**
+
 - `credentials-file`의 경로를 실제 Tunnel ID로 변경하세요
 - `hostname`을 실제 도메인으로 변경하세요
 
@@ -387,6 +401,7 @@ cloudflared tunnel run errorwatch-api
 터미널에 로그가 출력되면 성공!
 
 테스트:
+
 ```bash
 curl https://api.errorwatch.com/actuator/health
 ```
@@ -426,12 +441,14 @@ curl https://api.errorwatch.com/actuator/health
 **주의:** `your-username`을 실제 사용자명으로 변경하세요!
 
 로드:
+
 ```bash
 launchctl load ~/Library/LaunchAgents/com.cloudflare.cloudflared.plist
 launchctl list | grep cloudflare
 ```
 
 상태 확인:
+
 ```bash
 # PID가 있고, Status가 0이면 정상
 launchctl list | grep cloudflare
@@ -445,7 +462,7 @@ launchctl list | grep cloudflare
 ### 7.1 GitHub에 코드 푸시
 
 ```bash
-cd C:/projects/error-monitor
+cd C:/projects/bugshot
 git add .
 git commit -m "chore: prepare for deployment"
 git push origin main
@@ -455,7 +472,7 @@ git push origin main
 
 1. [Vercel Dashboard](https://vercel.com) 로그인
 2. **Add New** → **Project** 클릭
-3. **Import Git Repository** → GitHub 저장소 `error-monitor` 선택
+3. **Import Git Repository** → GitHub 저장소 `bugshot` 선택
 4. 프로젝트 설정:
    - **Framework Preset**: Next.js (자동 감지)
    - **Root Directory**: `frontend` 입력
@@ -480,7 +497,8 @@ NEXT_PUBLIC_API_URL=https://api.errorwatch.com
 빌드 진행 상황을 실시간으로 확인할 수 있습니다.
 
 배포 완료 후:
-- Production URL: `https://error-monitor-xxxx.vercel.app`
+
+- Production URL: `https://bugshot-xxxx.vercel.app`
 
 ### 7.5 커스텀 도메인 연결 (선택)
 
@@ -490,6 +508,7 @@ NEXT_PUBLIC_API_URL=https://api.errorwatch.com
 4. Vercel이 제공하는 CNAME 레코드를 Cloudflare DNS에 추가:
 
 Cloudflare DNS:
+
 ```
 Type: CNAME
 Name: @ (또는 errorwatch.com)
@@ -521,6 +540,7 @@ git push origin main
 ```
 
 CDN URL:
+
 ```
 https://errorwatch.com/sdk/errorwatch.min.js
 ```
@@ -538,6 +558,7 @@ npm publish --access public
 ```
 
 설치:
+
 ```bash
 npm install @errorwatch/browser-sdk
 ```
@@ -571,26 +592,26 @@ open https://errorwatch.com
 ```html
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>ErrorWatch SDK Test</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>ErrorWatch SDK Test</h1>
     <button onclick="testError()">Test Error</button>
 
     <script src="https://errorwatch.com/sdk/errorwatch.min.js"></script>
     <script>
-        ErrorWatch.init({
-            apiKey: 'ew_test_YOUR_API_KEY',
-            environment: 'production',
-            debug: true
-        });
+      ErrorWatch.init({
+        apiKey: "ew_test_YOUR_API_KEY",
+        environment: "production",
+        debug: true,
+      });
 
-        function testError() {
-            throw new Error('Test error from SDK!');
-        }
+      function testError() {
+        throw new Error("Test error from SDK!");
+      }
     </script>
-</body>
+  </body>
 </html>
 ```
 
@@ -599,11 +620,13 @@ open https://errorwatch.com
 ### 9.4 전체 플로우 테스트
 
 1. **프론트엔드** (`https://errorwatch.com`)
+
    - 회원가입 → 로그인
    - 프로젝트 생성
    - API 키 복사
 
 2. **SDK 설치**
+
    - 테스트 웹사이트에 SDK 설치
    - 에러 발생 시뮬레이션
 
@@ -618,18 +641,19 @@ open https://errorwatch.com
 
 ### 월간 비용 (KRW)
 
-| 항목 | 비용 | 비고 |
-|------|------|------|
-| Mac Mini 전기세 (12W × 24h × 30d) | ₩1,300 | 전기 요금 기준 |
-| Cloudflare Tunnel | **₩0** | 무료 |
-| Cloudflare R2 (10GB) | **₩0** | 무료 티어 |
-| Vercel (Hobby) | **₩0** | 무료 플랜 |
-| 도메인 (.com) | ₩1,500 | 월 환산 |
-| **총 비용** | **₩2,800** | 약 **$2.10/월** |
+| 항목                              | 비용       | 비고            |
+| --------------------------------- | ---------- | --------------- |
+| Mac Mini 전기세 (12W × 24h × 30d) | ₩1,300     | 전기 요금 기준  |
+| Cloudflare Tunnel                 | **₩0**     | 무료            |
+| Cloudflare R2 (10GB)              | **₩0**     | 무료 티어       |
+| Vercel (Hobby)                    | **₩0**     | 무료 플랜       |
+| 도메인 (.com)                     | ₩1,500     | 월 환산         |
+| **총 비용**                       | **₩2,800** | 약 **$2.10/월** |
 
 ### AWS 비교
 
 AWS 동일 구성 비용:
+
 - EC2 t3.medium: ₩35,000
 - RDS MySQL t3.micro: ₩20,000
 - S3 (10GB): ₩300
@@ -655,11 +679,13 @@ launchctl list | grep cloudflare
 **해결:**
 
 1. 로그 확인
+
 ```bash
 cat ~/cloudflared.err.log
 ```
 
 2. plist 파일 확인
+
 ```bash
 cat ~/Library/LaunchAgents/com.cloudflare.cloudflared.plist
 ```
@@ -667,6 +693,7 @@ cat ~/Library/LaunchAgents/com.cloudflare.cloudflared.plist
 3. ProgramArguments 각 인자가 별도 `<string>` 태그에 있는지 확인!
 
 4. 재시작
+
 ```bash
 launchctl unload ~/Library/LaunchAgents/com.cloudflare.cloudflared.plist
 launchctl load ~/Library/LaunchAgents/com.cloudflare.cloudflared.plist
@@ -692,6 +719,7 @@ docker-compose up --build -d
 **증상:** `Module not found: Can't resolve...`
 
 **해결:**
+
 ```bash
 cd frontend
 pnpm install
@@ -699,6 +727,7 @@ pnpm run build  # 로컬에서 빌드 테스트
 ```
 
 Vercel 환경 변수 확인:
+
 - `NEXT_PUBLIC_API_URL`이 올바른지 확인
 
 ### 11.4 CORS 에러
@@ -749,28 +778,31 @@ docker-compose logs -f mysql
 ### 12.2 백업
 
 **MySQL 백업:**
+
 ```bash
-cd ~/projects/error-monitor
+cd ~/projects/bugshot
 docker-compose exec mysql mysqldump -u root -p error_monitor > backup_$(date +%Y%m%d).sql
 ```
 
 **환경 변수 백업:**
+
 ```bash
 cp .env .env.backup.$(date +%Y%m%d)
 ```
 
 **자동 백업 설정 (cron):**
+
 ```bash
 crontab -e
 
 # 매일 새벽 3시 백업
-0 3 * * * cd ~/projects/error-monitor && docker-compose exec mysql mysqldump -u root -pYOUR_PASSWORD error_monitor > ~/backups/error_monitor_$(date +\%Y\%m\%d).sql
+0 3 * * * cd ~/projects/bugshot && docker-compose exec mysql mysqldump -u root -pYOUR_PASSWORD error_monitor > ~/backups/error_monitor_$(date +\%Y\%m\%d).sql
 ```
 
 ### 12.3 업데이트
 
 ```bash
-cd ~/projects/error-monitor
+cd ~/projects/bugshot
 git pull origin main
 docker-compose up --build -d
 ```
@@ -778,6 +810,7 @@ docker-compose up --build -d
 ### 12.4 모니터링
 
 **UptimeRobot** (무료) 설정:
+
 - URL: `https://api.errorwatch.com/actuator/health`
 - Interval: 5분
 - Alert: Email
@@ -803,11 +836,13 @@ docker-compose up --build -d
 이제 다음을 진행할 수 있습니다:
 
 1. **마케팅 준비**
+
    - 랜딩 페이지 개선
    - 데모 영상 제작
    - 블로그 글 작성
 
 2. **기능 추가**
+
    - Slack 웹훅 통합
    - Telegram 웹훅 통합
    - 이메일 알림

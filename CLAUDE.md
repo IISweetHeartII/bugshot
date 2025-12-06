@@ -29,7 +29,7 @@ cd backend
 ```
 
 **Environment variables for backend**:
-- `DB_URL` - Database connection URL (default: `jdbc:mysql://localhost:3306/error_monitor`)
+- `DB_URL` - Database connection URL (default: `jdbc:mysql://localhost:3306/bugshot`)
 - `DB_USER` - Database username (default: `root`)
 - `DB_PW` - Database password (default: `password`)
 - `SPRING_PROFILES_ACTIVE` - Active profile (default: `local`)
@@ -152,7 +152,7 @@ Uses Next.js App Router:
 ### Database Configuration
 
 MySQL connection details (Docker default):
-- Database: `error_monitor`
+- Database: `bugshot`
 - Root password: `root`
 - App user: `error_user`
 - App password: `error_password`

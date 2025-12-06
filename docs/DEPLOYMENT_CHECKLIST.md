@@ -67,8 +67,8 @@ JWT_SECRET=________________________
   ```bash
   mkdir -p ~/projects
   cd ~/projects
-  git clone https://github.com/IISweetHeartII/error-monitor.git
-  cd error-monitor
+  git clone https://github.com/IISweetHeartII/bugshot.git
+  cd bugshot
   ```
 
 - [ ] `.env` 파일 복사 (로컬 PC → Mac Mini)
@@ -148,7 +148,7 @@ JWT_SECRET=________________________
 
 - [ ] [Vercel Dashboard](https://vercel.com) 로그인
 - [ ] **Add New** → **Project**
-- [ ] GitHub 저장소 `error-monitor` 선택
+- [ ] GitHub 저장소 `bugshot` 선택
 - [ ] **Root Directory**: `frontend` 입력
 - [ ] **Environment Variables** 추가:
   ```
@@ -159,7 +159,7 @@ JWT_SECRET=________________________
 ### 5.3 배포 확인
 
 - [ ] 빌드 완료 대기 (2-3분)
-- [ ] Production URL 확인: `https://error-monitor-xxxx.vercel.app`
+- [ ] Production URL 확인: `https://bugshot-xxxx.vercel.app`
 - [ ] 브라우저에서 접속 테스트
 
 ### 5.4 커스텀 도메인 (선택)

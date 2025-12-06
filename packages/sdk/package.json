@@ -1,10 +1,10 @@
 {
-  "name": "@errorwatch/browser-sdk",
+  "name": "@bugshot/browser-sdk",
   "version": "1.0.0",
-  "description": "ErrorWatch Browser SDK - Real-time error monitoring and session replay",
+  "description": "Bugshot Browser SDK - Real-time error monitoring and session replay",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
-  "browser": "dist/errorwatch.min.js",
+  "browser": "dist/bugshot.min.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
@@ -16,17 +16,17 @@
     "prepublishOnly": "pnpm run build"
   },
   "keywords": [
-    "error-monitoring",
+    "bugshoting",
     "error-tracking",
     "session-replay",
     "monitoring",
-    "errorwatch"
+    "bugshot"
   ],
-  "author": "ErrorWatch Team",
+  "author": "Bugshot Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/errorwatch/errorwatch"
+    "url": "https://github.com/bugshot/bugshot"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

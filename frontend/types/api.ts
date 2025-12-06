@@ -56,7 +56,9 @@ export interface ErrorResponse {
   projectId: string;
   errorHash: string;
   type: string;
+  errorType: string;
   message: string;
+  errorMessage: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   status: 'UNRESOLVED' | 'RESOLVED' | 'IGNORED';
   occurrenceCount: number;
@@ -64,12 +66,16 @@ export interface ErrorResponse {
   priorityScore: number;
   firstSeenAt: string;
   lastSeenAt: string;
+  lastOccurredAt: string;
   resolvedAt: string | null;
   resolvedBy: string | null;
   stackTrace: string | null;
   file: string | null;
+  filePath: string | null;
   line: number | null;
+  lineNumber: number | null;
   method: string | null;
+  methodName: string | null;
   url: string | null;
   httpMethod: string | null;
   userAgent: string | null;
@@ -85,6 +91,8 @@ export interface DashboardStatsResponse {
   affectedUsers: number;
   changeRate: number;
   avgResponseTime: number | null;
+  lastErrorTime: string | null;
+  trend: number;
   severityCount: {
     critical: number;
     high: number;
@@ -126,7 +134,7 @@ export interface SessionReplayResponse {
 export interface WebhookConfigResponse {
   id: string;
   projectId: string;
-  type: 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'CUSTOM';
+  type: 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'KAKAO_WORK' | 'CUSTOM';
   name: string;
   webhookUrl: string;
   enabled: boolean;
@@ -153,7 +161,7 @@ export interface ProjectRequest {
  */
 export interface WebhookConfigRequest {
   projectId: string;
-  type: 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'CUSTOM';
+  type: 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'KAKAO_WORK' | 'CUSTOM';
   webhookUrl: string;
   name: string;
   enabled?: boolean;

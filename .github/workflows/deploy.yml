@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted  # 맥미니에서 실행
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -20,52 +20,104 @@ jobs:
           cache: 'gradle'
 
       - name: Grant execute permission for gradlew
-        working-directory: ./backend
-        run: chmod +x gradlew
+        run: chmod +x backend/gradlew
 
       - name: Build with Gradle (skip tests)
-        working-directory: ./backend
-        run: ./gradlew build -x test
+        run: |
+          cd backend
+          ./gradlew build -x test
 
   deploy:
     needs: build
-    runs-on: self-hosted  # 맥미니에서 실행
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create .env file from GitHub Secrets
+        run: |
+          cd ~/projects/bugshot
+          
+          echo "🔐 Creating .env file from GitHub Secrets..."
+          cat > .env << ENVEOF
+# Database Configuration (Auto-generated from GitHub Secrets)
+DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
+DB_USER=${{ secrets.DB_USER }}
+DB_PW=${{ secrets.DB_PW }}
+
+# Spring Profile
+SPRING_PROFILES_ACTIVE=prod
+
+# JWT
+JWT_SECRET=${{ secrets.JWT_SECRET }}
+
+# Cloudflare R2
+CLOUDFLARE_R2_ACCOUNT_ID=${{ secrets.CLOUDFLARE_R2_ACCOUNT_ID }}
+CLOUDFLARE_R2_BUCKET=${{ secrets.CLOUDFLARE_R2_BUCKET }}
+CLOUDFLARE_R2_ACCESS_KEY=${{ secrets.CLOUDFLARE_R2_ACCESS_KEY }}
+CLOUDFLARE_R2_SECRET_KEY=${{ secrets.CLOUDFLARE_R2_SECRET_KEY }}
+
+# Discord Bot
+DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}
+
+# OAuth2
+GITHUB_CLIENT_ID=${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
+GITHUB_CLIENT_SECRET=${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
+GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+# Email
+MAIL_HOST=${{ secrets.MAIL_HOST }}
+MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+
+# Frontend URL
+FRONTEND_BASE_URL=https://bugshot.log8.kr
+ENVEOF
+          
+          echo "✅ .env file created successfully!"
+
       - name: Deploy to Mac Mini
         run: |
-          cd ~/projects/error-monitor
-
+          cd ~/projects/bugshot
+          
           echo "📥 Pulling latest code..."
           git pull origin main
-
+          
           echo "🐳 Rebuilding Docker containers..."
           docker compose down
           docker compose up --build -d
-
+          
           echo "⏳ Waiting for services to start..."
-          sleep 15
-
+          sleep 20
+          
           echo "✅ Checking service health..."
           docker compose ps
-
+          
           # Health check
-          if curl -f http://localhost:8081/actuator/health; then
-            echo "✅ Deployment successful!"
-          else
-            echo "❌ Deployment failed - health check failed"
-            docker compose logs backend
-            exit 1
-          fi
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f http://localhost:8081/actuator/health; then
+              echo "✅ Deployment successful!"
+              exit 0
+            fi
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "⏳ Retry $RETRY_COUNT/$MAX_RETRIES..."
+            sleep 5
+          done
+          
+          echo "❌ Deployment failed - health check failed"
+          docker compose logs backend
+          exit 1
 
       - name: Notify deployment status
         if: always()
         run: |
-          if [ ${{ job.status }} == 'success' ]; then
-            echo "✅ Deployment to Mac Mini succeeded!"
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Bugshot deployment to Mac Mini succeeded!"
           else
-            echo "❌ Deployment to Mac Mini failed!"
+            echo "❌ Bugshot deployment to Mac Mini failed!"
           fi

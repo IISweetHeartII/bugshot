@@ -23,30 +23,12 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-
-interface ErrorDetail {
-  id: string;
-  errorType: string;
-  errorMessage: string;
-  severity: string;
-  status: string;
-  occurrenceCount: number;
-  affectedUsersCount: number;
-  priorityScore: number;
-  filePath: string;
-  lineNumber: number;
-  methodName: string;
-  stackTrace: string;
-  lastSeenAt: string;
-  firstSeenAt: string;
-  resolvedAt: string | null;
-  resolvedBy: string | null;
-}
+import type { ErrorResponse } from "@/types/api";
 
 export default function ErrorDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [error, setError] = useState<ErrorDetail | null>(null);
+  const [error, setError] = useState<ErrorResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

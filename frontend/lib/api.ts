@@ -139,11 +139,11 @@ class ApiClient {
     });
   }
 
-  async resolveError(id: string, userId: string): Promise<void> {
+  async resolveError(id: string, userId?: string): Promise<void> {
     return this.request<void>({
       method: 'PUT',
       url: `/api/errors/${id}/resolve`,
-      params: { userId },
+      params: userId ? { userId } : undefined,
     });
   }
 

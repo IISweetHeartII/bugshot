@@ -1,0 +1,76 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'com.github.YOUR_GITHUB_USERNAME'  // GitHub username으로 변경하세요
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Java 11+ has built-in HttpClient, no external dependencies needed!
+
+    // 테스트 의존성
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// JitPack을 위한 Maven 발행 설정
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'ErrorWatch Java SDK'
+                description = 'Java SDK for ErrorWatch - Real-time error monitoring'
+                url = 'https://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'YOUR_GITHUB_USERNAME'
+                        name = 'Your Name'
+                        email = 'your.email@example.com'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk.git'
+                    developerConnection = 'scm:git:ssh://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk.git'
+                    url = 'https://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk'
+                }
+            }
+        }
+    }
+}
+
+// Javadoc 인코딩 설정
+tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+// 소스 인코딩 설정
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

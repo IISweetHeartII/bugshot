@@ -1,161 +1,75 @@
-# Error Monitoring Service
+# 🎯 Bugshot
 
-> 다국어 지원 에러 모니터링 서비스 (모노레포)
+> 실시간 에러 모니터링 및 알림 서비스
 
-## 🏗️ 프로젝트 구조
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-```
-error-monitor/
-├── frontend/          # Next.js (TypeScript)
-│   ├── app/          # App Router
-│   ├── components/   # React 컴포넌트
-│   └── public/       # 정적 파일
-│
-├── backend/           # Spring Boot (Java 21)
-│   ├── src/main/
-│   │   ├── java/
-│   │   └── resources/
-│   └── build.gradle
-│
-├── docker-compose.yml # 통합 개발 환경
-└── README.md
-```
+## 소개
 
-## 🚀 빠른 시작
+Bugshot은 웹 애플리케이션의 에러를 실시간으로 수집하고, Discord/Slack/카카오톡으로 즉시 알림을 보내주는 서비스입니다.
 
-### 전체 요구사항
+## 주요 기능
 
-- Java 21
-- Node.js 18+
-- MySQL 8.0 (또는 Docker)
+- 🔴 **실시간 에러 수집** - JavaScript SDK로 에러 자동 캡처
+- 🎬 **세션 리플레이** - 에러 발생 당시 사용자 행동 녹화
+- 📊 **대시보드** - 에러 통계 및 트렌드 분석
+- 🔔 **알림** - Discord, Slack, Email 알림
+- 🔑 **API Key 관리** - 프로젝트별 API 키 발급
 
-### 방법 1: Docker Compose (권장)
-
-```bash
-# MySQL만 실행
-docker-compose up mysql -d
-
-# 백엔드 실행 (로컬)
-cd backend
-./gradlew bootRun
-
-# 프론트엔드 실행 (로컬)
-cd frontend
-pnpm install
-pnpm run dev
-```
-
-### 방법 2: 로컬 실행
-
-#### 백엔드
-
-```bash
-cd backend
-
-# MySQL 연결 정보 설정 (환경변수)
-export DB_URL=jdbc:mysql://localhost:3306/error_monitor
-export DB_USER=root
-export DB_PW=your_password
-
-# 실행
-./gradlew bootRun
-```
-
-#### 프론트엔드
-
-```bash
-cd frontend
-
-# 의존성 설치
-pnpm install
-
-# 개발 서버 실행
-pnpm run dev
-```
-
-## 📝 접속 URL
-
-- **프론트엔드**: http://localhost:3000
-- **백엔드 API**: http://localhost:8080
-- **Actuator**: http://localhost:8080/actuator
-
-## 🛠️ 기술 스택
-
-### Frontend
-
-- **Framework**: Next.js 15
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Features**: App Router, Turbopack
+## 기술 스택
 
 ### Backend
+- Java 21 + Spring Boot 3.5
+- MySQL 8.0 + Redis
+- Cloudflare R2 (세션 리플레이 저장)
 
-- **Framework**: Spring Boot 3.5.6
-- **Language**: Java 21
-- **Database**: MySQL 8.0
-- **ORM**: Spring Data JPA (Hibernate)
-- **Build Tool**: Gradle
+### Frontend
+- Next.js 15 + TypeScript
+- Tailwind CSS
+- React 19
 
-## 📂 개발 가이드
+### SDK
+- JavaScript SDK (Browser)
+- Java SDK (JitPack)
 
-### 백엔드 구조
+## 빠른 시작
 
-```
-backend/src/main/java/com/error/monitor/
-├── ErrorMonitorApplication.java
-├── domain/
-│   ├── project/
-│   ├── error/
-│   └── notification/
-└── global/
-    ├── config/
-    ├── exception/
-    └── response/
+### 1. 환경 설정
+```bash
+cp .env.example .env
+# .env 파일 수정
 ```
 
-### 프론트엔드 구조
-
-```
-frontend/
-├── app/
-│   ├── layout.tsx
-│   ├── page.tsx
-│   └── api/           # API Routes (필요 시)
-├── components/
-└── lib/
+### 2. Docker로 실행
+```bash
+docker compose up -d
 ```
 
-## 🔧 환경 변수
+### 3. 접속
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8081
+- Swagger: http://localhost:8081/swagger-ui.html
 
-### Backend (.env 또는 환경변수)
+## SDK 사용법
 
-```env
-DB_URL=jdbc:mysql://localhost:3306/error_monitor
-DB_USER=root
-DB_PW=password
-SPRING_PROFILES_ACTIVE=local
+### JavaScript
+```html
+<script src="https://cdn.bugshot.log8.kr/sdk.js"></script>
+<script>
+  Bugshot.init({ apiKey: 'your-api-key' });
+</script>
 ```
 
-### Frontend (.env.local)
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8080
+### Java
+```groovy
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+dependencies {
+    implementation 'com.github.YOUR_USERNAME:bugshot-java-sdk:1.0.0'
+}
 ```
 
-## 📖 문서
-
-- [PRD 문서](./PRD_ErrorMonitoring_Service.md)
-- [아키텍처 진화 가이드](./ARCHITECTURE_EVOLUTION.md)
-- [Next.js 풀스택 가이드](./NEXTJS_FULLSTACK_STARTER.md)
-
-## 🤝 기여하기
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📜 라이센스
+## 라이선스
 
 MIT License

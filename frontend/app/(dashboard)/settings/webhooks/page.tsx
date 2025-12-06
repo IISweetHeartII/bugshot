@@ -303,6 +303,7 @@ function WebhookDialog({
               <option value="DISCORD">Discord</option>
               <option value="SLACK">Slack</option>
               <option value="TELEGRAM">Telegram</option>
+              <option value="KAKAO_WORK">Kakao Work</option>
               <option value="CUSTOM">Custom</option>
             </select>
           </div>

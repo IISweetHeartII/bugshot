@@ -204,7 +204,7 @@ export default function ErrorsPage() {
             >
               <div className="flex items-start gap-4">
                 {/* Severity Emoji */}
-                <div className="text-3xl flex-shrink-0">
+                <div className="text-3xl shrink-0">
                   {getSeverityEmoji(error.severity)}
                 </div>
 
@@ -243,7 +243,7 @@ export default function ErrorsPage() {
                     </div>
 
                     {/* Priority Score */}
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <div className="text-2xl font-bold text-primary">
                         {Math.round(error.priorityScore)}
                       </div>

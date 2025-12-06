@@ -1,0 +1,59 @@
+# ============================================
+# Bugshot - Production Configuration
+# ============================================
+# Mac Mini 홈서버 배포용 설정
+
+spring:
+  application:
+    name: bugshot
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # 프로덕션에서도 자동 스키마 업데이트 (또는 validate로 변경)
+    show-sql: false     # 프로덕션에서는 SQL 로그 비활성화
+
+  # Redis 캐시 설정
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10분
+
+# 서버 설정
+server:
+  port: 8081
+
+# Actuator 설정 (Health check용)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
+# 커스텀 설정
+app:
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:https://bugshot.log8.kr}
+  email:
+    from: ${EMAIL_FROM:noreply@bugshot.log8.kr}
+    from-name: ${EMAIL_FROM_NAME:Bugshot}
+
+# 로깅 설정
+logging:
+  level:
+    root: INFO
+    com.bugshot: INFO
+    org.hibernate.SQL: WARN
+  file:
+    name: /app/logs/bugshot.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
