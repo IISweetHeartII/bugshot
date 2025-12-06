@@ -82,7 +82,7 @@ public class DiscordCommandHandler extends ListenerAdapter {
             }
 
             embed.setTimestamp(Instant.now())
-                .setFooter("ErrorWatch", null);
+                .setFooter("BugShot", null);
 
             event.replyEmbeds(embed.build()).queue();
         } catch (Exception e) {
@@ -136,7 +136,7 @@ public class DiscordCommandHandler extends ListenerAdapter {
             }
 
             embed.setTimestamp(Instant.now())
-                .setFooter("ErrorWatch", null);
+                .setFooter("BugShot", null);
 
             event.replyEmbeds(embed.build()).queue();
         } catch (Exception e) {
@@ -246,7 +246,7 @@ public class DiscordCommandHandler extends ListenerAdapter {
                 .addField("프론트엔드에서 보기", frontendBaseUrl + "/replays/" + errorId, false)
                 .addField("다운로드 링크", "[여기를 클릭하세요](" + downloadUrl + ")\n(24시간 유효)", false)
                 .setTimestamp(Instant.now())
-                .setFooter("ErrorWatch", null);
+                .setFooter("BugShot", null);
 
             event.replyEmbeds(embed.build()).queue();
 

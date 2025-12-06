@@ -8,11 +8,11 @@ console.log('Available exports:', Object.keys(ReactPlugin));
 if (ReactPlugin.ErrorBoundary) {
   console.log('✅ ErrorBoundary component exists');
 }
-if (ReactPlugin.ErrorWatchProvider) {
-  console.log('✅ ErrorWatchProvider component exists');
+if (ReactPlugin.BugShotProvider) {
+  console.log('✅ BugShotProvider component exists');
 }
-if (typeof ReactPlugin.useErrorWatch === 'function') {
-  console.log('✅ useErrorWatch hook exists');
+if (typeof ReactPlugin.useBugShot === 'function') {
+  console.log('✅ useBugShot hook exists');
 }
 
 console.log('\n📦 React plugin is ready to use!');

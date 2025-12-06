@@ -35,8 +35,8 @@ publishing {
             from components.java
 
             pom {
-                name = 'ErrorWatch Java SDK'
-                description = 'Java SDK for ErrorWatch - Real-time error monitoring'
+                name = 'BugShot Java SDK'
+                description = 'Java SDK for BugShot - Real-time error monitoring'
                 url = 'https://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk'
 
                 licenses {

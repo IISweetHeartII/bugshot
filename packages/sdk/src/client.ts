@@ -1,21 +1,21 @@
 /**
- * ErrorWatch Client - Main SDK Class
+ * BugShot Client - Main SDK Class
  */
 
-import type { ErrorWatchConfig, CapturedError, ErrorContext, IngestPayload, UserInfo } from './types';
+import type { BugShotConfig, CapturedError, ErrorContext, IngestPayload, UserInfo } from './types';
 import { ErrorCapture } from './error-capture';
 import { SessionReplay } from './session-replay';
 import { Transport } from './transport';
 import { shouldSample, log } from './utils';
 
-export class ErrorWatchClient {
-  private config: ErrorWatchConfig;
+export class BugShotClient {
+  private config: BugShotConfig;
   private errorCapture: ErrorCapture;
   private sessionReplay: SessionReplay | null = null;
   private transport: Transport;
   private initialized = false;
 
-  constructor(config: ErrorWatchConfig) {
+  constructor(config: BugShotConfig) {
     // 기본값 설정
     this.config = {
       endpoint: 'http://localhost:8081',
@@ -29,13 +29,13 @@ export class ErrorWatchClient {
 
     // Validate API key
     if (!this.config.apiKey) {
-      throw new Error('ErrorWatch: API key is required');
+      throw new Error('BugShot: API key is required');
     }
 
     this.errorCapture = new ErrorCapture(this.config);
     this.transport = new Transport(this.config.endpoint!, this.config.debug);
 
-    log(this.config.debug!, 'ErrorWatch SDK initialized', this.config);
+    log(this.config.debug!, 'BugShot SDK initialized', this.config);
   }
 
   /**
@@ -43,7 +43,7 @@ export class ErrorWatchClient {
    */
   init(): void {
     if (this.initialized) {
-      log(this.config.debug!, 'ErrorWatch already initialized');
+      log(this.config.debug!, 'BugShot already initialized');
       return;
     }
 
@@ -68,7 +68,7 @@ export class ErrorWatchClient {
     });
 
     this.initialized = true;
-    log(this.config.debug!, 'ErrorWatch started successfully');
+    log(this.config.debug!, 'BugShot started successfully');
   }
 
   /**
@@ -189,6 +189,6 @@ export class ErrorWatchClient {
       this.sessionReplay.stop();
     }
     this.initialized = false;
-    log(this.config.debug!, 'ErrorWatch closed');
+    log(this.config.debug!, 'BugShot closed');
   }
 }

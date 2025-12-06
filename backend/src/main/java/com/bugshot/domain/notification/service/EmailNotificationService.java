@@ -155,9 +155,9 @@ public class EmailNotificationService {
 
         // Footer
         html.append("<div class=\"footer\">");
-        html.append("<p><strong>").append(escapeHtml(project.getName())).append("</strong> • ErrorWatch</p>");
+        html.append("<p><strong>").append(escapeHtml(project.getName())).append("</strong> • BugShot</p>");
         html.append("<p>You're receiving this email because you're subscribed to error notifications for this project.</p>");
-        html.append("<p style=\"color: #bbb; margin-top: 15px;\">© 2025 ErrorWatch. All rights reserved.</p>");
+        html.append("<p style=\"color: #bbb; margin-top: 15px;\">© 2025 BugShot. All rights reserved.</p>");
         html.append("</div>");
 
         html.append("</div>");

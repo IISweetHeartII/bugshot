@@ -1,9 +1,9 @@
 /**
- * ErrorWatch React Error Boundary
+ * BugShot React Error Boundary
  */
 
 import React, { Component, ReactNode, ErrorInfo } from 'react';
-import ErrorWatch from '@errorwatch/browser-sdk';
+import BugShot from '@bugshot/browser-sdk';
 
 interface ErrorBoundaryProps {
   /**
@@ -22,9 +22,9 @@ interface ErrorBoundaryProps {
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 
   /**
-   * ErrorWatch로 전송할지 여부 (기본값: true)
+   * BugShot로 전송할지 여부 (기본값: true)
    */
-  reportToErrorWatch?: boolean;
+  reportToBugShot?: boolean;
 }
 
 interface ErrorBoundaryState {
@@ -34,11 +34,11 @@ interface ErrorBoundaryState {
 }
 
 /**
- * React Error Boundary for ErrorWatch
+ * React Error Boundary for BugShot
  *
  * @example
  * ```tsx
- * import { ErrorBoundary } from '@errorwatch/react';
+ * import { ErrorBoundary } from '@bugshot/react';
  *
  * function App() {
  *   return (
@@ -69,9 +69,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({ errorInfo });
 
-    // ErrorWatch로 전송
-    if (this.props.reportToErrorWatch !== false) {
-      ErrorWatch.captureError(error, {
+    // BugShot로 전송
+    if (this.props.reportToBugShot !== false) {
+      BugShot.captureError(error, {
         type: 'React Error Boundary',
         componentStack: errorInfo.componentStack,
       });

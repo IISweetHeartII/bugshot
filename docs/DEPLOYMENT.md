@@ -1,6 +1,6 @@
-# ErrorWatch 배포 가이드 🚀
+# BugShot 배포 가이드 🚀
 
-이 문서는 ErrorWatch를 실제 프로덕션에 배포하는 완전한 가이드입니다.
+이 문서는 BugShot를 실제 프로덕션에 배포하는 완전한 가이드입니다.
 
 ## 📋 목차
 
@@ -23,8 +23,8 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     사용자                               │
-│  https://errorwatch.com (Frontend)                      │
-│  https://api.errorwatch.com (Backend API)               │
+│  https://bugshot.com (Frontend)                      │
+│  https://api.bugshot.com (Backend API)               │
 └─────────────────────────────────────────────────────────┘
                     ↓                    ↓
 ┌────────────────────────────┐  ┌───────────────────────────┐
@@ -74,7 +74,7 @@
 ✅ **도메인** (선택, 권장)
 
 - Cloudflare에서 구매 또는 기존 도메인 이전
-- 예: `errorwatch.com`
+- 예: `bugshot.com`
 
 ### 2.2 Mac Mini 사양
 
@@ -110,7 +110,7 @@ brew install git
 1. [Cloudflare Dashboard](https://dash.cloudflare.com) 로그인
 2. **R2 Object Storage** 클릭
 3. **Create bucket** 클릭
-4. Bucket 이름: `errorwatch-replays`
+4. Bucket 이름: `bugshot-replays`
 5. Location: **Automatic** (자동 선택)
 6. **Create bucket** 클릭
 
@@ -119,9 +119,9 @@ brew install git
 1. **R2** → **Manage R2 API Tokens**
 2. **Create API Token** 클릭
 3. 설정:
-   - **Token name**: `errorwatch-backend`
+   - **Token name**: `bugshot-backend`
    - **Permissions**: Object Read & Write
-   - **Specify bucket**: `errorwatch-replays`
+   - **Specify bucket**: `bugshot-replays`
    - **TTL**: Forever (만료 안 함)
 4. **Create API Token** 클릭
 
@@ -139,11 +139,11 @@ Account ID: zzzzzzzzzzzzzzzzzzzzzzzzzzz
 
 세션 리플레이 다운로드를 위해 Public Access 허용:
 
-1. Bucket `errorwatch-replays` 클릭
+1. Bucket `bugshot-replays` 클릭
 2. **Settings** → **Public Access**
 3. **Allow Public Access** 활성화
 4. Custom Domain 추가 (선택):
-   - `replays.errorwatch.com`
+   - `replays.bugshot.com`
 
 ---
 
@@ -178,11 +178,11 @@ MYSQL_PASSWORD=your_strong_password_here_123!
 # Cloudflare R2
 # ======================
 CLOUDFLARE_R2_ACCOUNT_ID=zzzzzzzzzzzzzzzzzzzzzzzzzzz
-CLOUDFLARE_R2_BUCKET=errorwatch-replays
+CLOUDFLARE_R2_BUCKET=bugshot-replays
 CLOUDFLARE_R2_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxx
 CLOUDFLARE_R2_SECRET_KEY=yyyyyyyyyyyyyyyyyyyyyyyyyyyyy
 CLOUDFLARE_R2_ENDPOINT=https://${CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com
-CLOUDFLARE_R2_PUBLIC_URL=https://replays.errorwatch.com
+CLOUDFLARE_R2_PUBLIC_URL=https://replays.bugshot.com
 
 # ======================
 # Spring Configuration
@@ -210,6 +210,12 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 # Discord Webhook (선택)
 # ======================
 DISCORD_BOT_TOKEN=your_discord_bot_token
+
+# ======================
+# Internal API Secret (BFF Pattern)
+# ======================
+# Frontend와 동일한 값 사용
+INTERNAL_API_SECRET=your_internal_api_secret_here
 ```
 
 **보안 팁:**
@@ -290,7 +296,7 @@ Docker Desktop 설정:
 
 또는 LaunchDaemon으로 설정:
 
-`~/Library/LaunchAgents/com.errorwatch.docker.plist`:
+`~/Library/LaunchAgents/com.bugshot.docker.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -298,7 +304,7 @@ Docker Desktop 설정:
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.errorwatch.docker</string>
+    <string>com.bugshot.docker</string>
     <key>ProgramArguments</key>
     <array>
         <string>/usr/local/bin/docker-compose</string>
@@ -318,7 +324,7 @@ Docker Desktop 설정:
 로드:
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.errorwatch.docker.plist
+launchctl load ~/Library/LaunchAgents/com.bugshot.docker.plist
 ```
 
 ---
@@ -341,7 +347,7 @@ cloudflared tunnel login
 브라우저가 열리면:
 
 1. 로그인
-2. 도메인 선택 (예: `errorwatch.com`)
+2. 도메인 선택 (예: `bugshot.com`)
 3. **Authorize** 클릭
 
 인증 파일 저장: `~/.cloudflared/cert.pem`
@@ -349,13 +355,13 @@ cloudflared tunnel login
 ### 6.3 Tunnel 생성
 
 ```bash
-cloudflared tunnel create errorwatch-api
+cloudflared tunnel create bugshot-api
 ```
 
 출력 예시:
 
 ```
-Created tunnel errorwatch-api with id c8020eea-444c-41eb-85c8-302e025fe1cd
+Created tunnel bugshot-api with id c8020eea-444c-41eb-85c8-302e025fe1cd
 ```
 
 **Tunnel ID를 복사하세요!**
@@ -367,12 +373,12 @@ Created tunnel errorwatch-api with id c8020eea-444c-41eb-85c8-302e025fe1cd
 `~/.cloudflared/config.yml` 생성:
 
 ```yaml
-tunnel: errorwatch-api
+tunnel: bugshot-api
 credentials-file: /Users/your-username/.cloudflared/c8020eea-444c-41eb-85c8-302e025fe1cd.json
 
 ingress:
   # Backend API
-  - hostname: api.errorwatch.com
+  - hostname: api.bugshot.com
     service: http://localhost:8081
 
   # Catch-all
@@ -387,7 +393,7 @@ ingress:
 ### 6.5 DNS 라우팅
 
 ```bash
-cloudflared tunnel route dns errorwatch-api api.errorwatch.com
+cloudflared tunnel route dns bugshot-api api.bugshot.com
 ```
 
 Cloudflare DNS에 CNAME 레코드가 자동으로 추가됩니다.
@@ -395,7 +401,7 @@ Cloudflare DNS에 CNAME 레코드가 자동으로 추가됩니다.
 ### 6.6 Tunnel 실행 테스트
 
 ```bash
-cloudflared tunnel run errorwatch-api
+cloudflared tunnel run bugshot-api
 ```
 
 터미널에 로그가 출력되면 성공!
@@ -403,7 +409,7 @@ cloudflared tunnel run errorwatch-api
 테스트:
 
 ```bash
-curl https://api.errorwatch.com/actuator/health
+curl https://api.bugshot.com/actuator/health
 ```
 
 ### 6.7 서비스로 등록 (자동 시작)
@@ -424,7 +430,7 @@ curl https://api.errorwatch.com/actuator/health
         <string>/Users/your-username/.cloudflared/config.yml</string>
         <string>tunnel</string>
         <string>run</string>
-        <string>errorwatch-api</string>
+        <string>bugshot-api</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -485,10 +491,20 @@ git push origin main
 **Environment Variables** 섹션에서 추가:
 
 ```
-NEXT_PUBLIC_API_URL=https://api.errorwatch.com
+BACKEND_URL=https://api.bugshot.com
+INTERNAL_API_SECRET=your-internal-api-secret-here
+NEXTAUTH_URL=https://bugshot.com
+NEXTAUTH_SECRET=your-nextauth-secret-here
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
-**모든 환경 (Production, Preview, Development)에 적용하세요!**
+**중요:**
+- `INTERNAL_API_SECRET`은 백엔드와 동일한 값을 사용해야 합니다
+- `openssl rand -base64 32`로 시크릿 생성
+- **모든 환경 (Production, Preview, Development)에 적용하세요!**
 
 ### 7.4 배포
 
@@ -504,14 +520,14 @@ NEXT_PUBLIC_API_URL=https://api.errorwatch.com
 
 1. Vercel 프로젝트 → **Settings** → **Domains**
 2. **Add** 클릭
-3. 도메인 입력: `errorwatch.com`
+3. 도메인 입력: `bugshot.com`
 4. Vercel이 제공하는 CNAME 레코드를 Cloudflare DNS에 추가:
 
 Cloudflare DNS:
 
 ```
 Type: CNAME
-Name: @ (또는 errorwatch.com)
+Name: @ (또는 bugshot.com)
 Target: cname.vercel-dns.com
 Proxy: DNS only (회색 구름)
 ```
@@ -531,8 +547,8 @@ Vercel Public 폴더 사용:
 ```bash
 # 프론트엔드 public 폴더에 SDK 복사
 mkdir -p frontend/public/sdk
-cp packages/sdk/dist/errorwatch.min.js frontend/public/sdk/
-cp packages/sdk/dist/errorwatch.min.js.map frontend/public/sdk/
+cp packages/sdk/dist/bugshot.min.js frontend/public/sdk/
+cp packages/sdk/dist/bugshot.min.js.map frontend/public/sdk/
 
 git add frontend/public/sdk/
 git commit -m "feat: add SDK to CDN"
@@ -542,7 +558,7 @@ git push origin main
 CDN URL:
 
 ```
-https://errorwatch.com/sdk/errorwatch.min.js
+https://bugshot.com/sdk/bugshot.min.js
 ```
 
 ### 8.2 NPM 배포 (선택)
@@ -560,7 +576,7 @@ npm publish --access public
 설치:
 
 ```bash
-npm install @errorwatch/browser-sdk
+npm install @bugshot/browser-sdk
 ```
 
 ---
@@ -571,16 +587,16 @@ npm install @errorwatch/browser-sdk
 
 ```bash
 # Health Check
-curl https://api.errorwatch.com/actuator/health
+curl https://api.bugshot.com/actuator/health
 
 # Swagger UI
-open https://api.errorwatch.com/swagger-ui.html
+open https://api.bugshot.com/swagger-ui.html
 ```
 
 ### 9.2 프론트엔드 테스트
 
 ```bash
-open https://errorwatch.com
+open https://bugshot.com
 ```
 
 로그인 페이지가 정상적으로 보이는지 확인!
@@ -593,15 +609,15 @@ open https://errorwatch.com
 <!DOCTYPE html>
 <html>
   <head>
-    <title>ErrorWatch SDK Test</title>
+    <title>BugShot SDK Test</title>
   </head>
   <body>
-    <h1>ErrorWatch SDK Test</h1>
+    <h1>BugShot SDK Test</h1>
     <button onclick="testError()">Test Error</button>
 
-    <script src="https://errorwatch.com/sdk/errorwatch.min.js"></script>
+    <script src="https://bugshot.com/sdk/bugshot.min.js"></script>
     <script>
-      ErrorWatch.init({
+      BugShot.init({
         apiKey: "ew_test_YOUR_API_KEY",
         environment: "production",
         debug: true,
@@ -619,7 +635,7 @@ open https://errorwatch.com
 
 ### 9.4 전체 플로우 테스트
 
-1. **프론트엔드** (`https://errorwatch.com`)
+1. **프론트엔드** (`https://bugshot.com`)
 
    - 회원가입 → 로그인
    - 프로젝트 생성
@@ -740,7 +756,7 @@ Vercel 환경 변수 확인:
 @Override
 public void addCorsMappings(CorsRegistry registry) {
     registry.addMapping("/api/**")
-            .allowedOrigins("https://errorwatch.com")  // 실제 도메인으로 변경
+            .allowedOrigins("https://bugshot.com")  // 실제 도메인으로 변경
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowCredentials(true);
 }
@@ -751,7 +767,7 @@ public void addCorsMappings(CorsRegistry registry) {
 ```bash
 # 100회 이상 요청 (100 req/min 제한 테스트)
 for i in {1..105}; do
-  curl -H "X-API-Key: your-api-key" https://api.errorwatch.com/api/ingest
+  curl -H "X-API-Key: your-api-key" https://api.bugshot.com/api/ingest
 done
 
 # 105번째부터 429 에러 발생해야 함
@@ -811,7 +827,7 @@ docker-compose up --build -d
 
 **UptimeRobot** (무료) 설정:
 
-- URL: `https://api.errorwatch.com/actuator/health`
+- URL: `https://api.bugshot.com/actuator/health`
 - Interval: 5분
 - Alert: Email
 
@@ -822,6 +838,7 @@ docker-compose up --build -d
 - [ ] `.env` 파일이 `.gitignore`에 포함되어 있는지 확인
 - [ ] 모든 비밀번호가 16자 이상인지 확인
 - [ ] JWT_SECRET이 32자 이상 랜덤 문자열인지 확인
+- [ ] `INTERNAL_API_SECRET`이 백엔드와 프론트엔드에서 동일한지 확인
 - [ ] Cloudflare R2 API Token이 최소 권한만 가지는지 확인
 - [ ] MySQL 포트(3306)가 외부에 노출되지 않는지 확인 (Docker 내부만)
 - [ ] Cloudflare Tunnel이 Rate Limiting 활성화되어 있는지 확인

@@ -53,7 +53,7 @@ export default function LoginPage() {
             <span className="text-3xl">⚡</span>
           </motion.div>
           <h1 className="text-3xl font-bold text-text-primary mb-2">
-            ErrorWatch
+            BugShot
           </h1>
           <p className="text-text-secondary">
             실시간 에러 모니터링 & 세션 리플레이

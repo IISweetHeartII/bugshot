@@ -1,25 +1,25 @@
 /**
- * ErrorWatch React Integration
+ * BugShot React Integration
  *
  * @example
  * ```tsx
- * import { ErrorBoundary, ErrorWatchProvider } from '@errorwatch/react';
+ * import { ErrorBoundary, BugShotProvider } from '@bugshot/react';
  *
  * function App() {
  *   return (
- *     <ErrorWatchProvider config={{ apiKey: 'your-api-key' }}>
+ *     <BugShotProvider config={{ apiKey: 'your-api-key' }}>
  *       <ErrorBoundary>
  *         <YourApp />
  *       </ErrorBoundary>
- *     </ErrorWatchProvider>
+ *     </BugShotProvider>
  *   );
  * }
  * ```
  */
 
 export { ErrorBoundary } from './ErrorBoundary';
-export { ErrorWatchProvider } from './ErrorWatchProvider';
-export { useErrorWatch } from './hooks';
+export { BugShotProvider } from './BugShotProvider';
+export { useBugShot } from './hooks';
 
 // Re-export types from SDK
-export type { ErrorWatchConfig, UserInfo } from '@errorwatch/browser-sdk';
+export type { BugShotConfig, UserInfo } from '@bugshot/browser-sdk';

@@ -149,8 +149,8 @@ public class Application {
 
     public static void main(String[] args) {
         // Bugshot 초기화
-        Bugshot.init(new BugshotConfig.Builder(System.getenv("ERRORWATCH_API_KEY"))
-            .endpoint(System.getenv("ERRORWATCH_ENDPOINT"))
+        Bugshot.init(new BugshotConfig.Builder(System.getenv("BUGSHOT_API_KEY"))
+            .endpoint(System.getenv("BUGSHOT_ENDPOINT"))
             .environment(System.getenv("SPRING_PROFILES_ACTIVE"))
             .build());
 

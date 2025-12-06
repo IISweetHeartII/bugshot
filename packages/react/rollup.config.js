@@ -10,7 +10,7 @@ export default [
       format: 'es',
       sourcemap: true,
     },
-    external: ['react', '@errorwatch/browser-sdk'],
+    external: ['react', '@bugshot/browser-sdk'],
     plugins: [
       resolve(),
       commonjs(),
@@ -28,7 +28,7 @@ export default [
       format: 'cjs',
       sourcemap: true,
     },
-    external: ['react', '@errorwatch/browser-sdk'],
+    external: ['react', '@bugshot/browser-sdk'],
     plugins: [
       resolve(),
       commonjs(),

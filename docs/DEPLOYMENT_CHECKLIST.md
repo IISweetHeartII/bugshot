@@ -1,4 +1,4 @@
-# ErrorWatch 배포 체크리스트 ✅
+# BugShot 배포 체크리스트 ✅
 
 이 문서는 배포 시 순서대로 따라가며 체크할 수 있는 간단한 체크리스트입니다.
 
@@ -9,7 +9,7 @@
 ## 1단계: Cloudflare R2 설정 (10분)
 
 - [x] Cloudflare 계정 생성 또는 로그인
-- [x] R2 Bucket 생성: `errorwatch-replays`
+- [x] R2 Bucket 생성: `bugshot-replays`
 - [x] R2 API Token 생성
 - [x] 아래 정보 저장 (한 번만 보임!):
   ```
@@ -38,7 +38,7 @@ MYSQL_PASSWORD=________________________  # DB_PW와 동일
 
 # Cloudflare R2
 CLOUDFLARE_R2_ACCOUNT_ID=________________________
-CLOUDFLARE_R2_BUCKET=errorwatch-replays
+CLOUDFLARE_R2_BUCKET=bugshot-replays
 CLOUDFLARE_R2_ACCESS_KEY=________________________
 CLOUDFLARE_R2_SECRET_KEY=________________________
 
@@ -94,7 +94,7 @@ JWT_SECRET=________________________
 - [ ] cloudflared 설치: `brew install cloudflare/cloudflare/cloudflared`
 - [ ] Cloudflare 로그인: `cloudflared tunnel login`
 - [ ] 도메인 선택 및 Authorize
-- [ ] Tunnel 생성: `cloudflared tunnel create errorwatch-api`
+- [ ] Tunnel 생성: `cloudflared tunnel create bugshot-api`
 - [ ] Tunnel ID 저장: `________________________`
 
 ### 4.2 설정 파일
@@ -102,23 +102,23 @@ JWT_SECRET=________________________
 - [ ] `~/.cloudflared/config.yml` 생성:
 
   ```yaml
-  tunnel: errorwatch-api
+  tunnel: bugshot-api
   credentials-file: /Users/YOUR-USERNAME/.cloudflared/[TUNNEL-ID].json
 
   ingress:
-    - hostname: api.errorwatch.com # 실제 도메인으로 변경
+    - hostname: api.bugshot.com # 실제 도메인으로 변경
       service: http://localhost:8081
     - service: http_status:404
   ```
 
-- [ ] DNS 라우팅: `cloudflared tunnel route dns errorwatch-api api.errorwatch.com`
+- [ ] DNS 라우팅: `cloudflared tunnel route dns bugshot-api api.bugshot.com`
 
 ### 4.3 테스트
 
-- [ ] Tunnel 실행: `cloudflared tunnel run errorwatch-api`
+- [ ] Tunnel 실행: `cloudflared tunnel run bugshot-api`
 - [ ] 새 터미널에서 테스트:
   ```bash
-  curl https://api.errorwatch.com/actuator/health
+  curl https://api.bugshot.com/actuator/health
   ```
 - [ ] Ctrl+C로 종료
 
@@ -152,7 +152,14 @@ JWT_SECRET=________________________
 - [ ] **Root Directory**: `frontend` 입력
 - [ ] **Environment Variables** 추가:
   ```
-  NEXT_PUBLIC_API_URL=https://api.errorwatch.com
+  BACKEND_URL=https://api.bugshot.com
+  INTERNAL_API_SECRET=________________________  # 백엔드와 동일한 값
+  NEXTAUTH_URL=https://bugshot.com
+  NEXTAUTH_SECRET=________________________
+  GITHUB_CLIENT_ID=________________________
+  GITHUB_CLIENT_SECRET=________________________
+  GOOGLE_CLIENT_ID=________________________
+  GOOGLE_CLIENT_SECRET=________________________
   ```
 - [ ] **Deploy** 클릭!
 
@@ -165,7 +172,7 @@ JWT_SECRET=________________________
 ### 5.4 커스텀 도메인 (선택)
 
 - [ ] Vercel → **Settings** → **Domains**
-- [ ] 도메인 추가: `errorwatch.com`
+- [ ] 도메인 추가: `bugshot.com`
 - [ ] Cloudflare DNS에 CNAME 레코드 추가
 - [ ] 도메인 확인 완료
 
@@ -177,7 +184,7 @@ JWT_SECRET=________________________
 
   ```bash
   mkdir -p frontend/public/sdk
-  cp packages/sdk/dist/errorwatch.min.js frontend/public/sdk/
+  cp packages/sdk/dist/bugshot.min.js frontend/public/sdk/
   ```
 
 - [ ] Git 푸시:
@@ -189,7 +196,7 @@ JWT_SECRET=________________________
   ```
 
 - [ ] Vercel 자동 배포 대기
-- [ ] CDN URL 확인: `https://errorwatch.com/sdk/errorwatch.min.js`
+- [ ] CDN URL 확인: `https://bugshot.com/sdk/bugshot.min.js`
 
 ---
 
@@ -200,17 +207,17 @@ JWT_SECRET=________________________
 - [ ] Health Check:
 
   ```bash
-  curl https://api.errorwatch.com/actuator/health
+  curl https://api.bugshot.com/actuator/health
   ```
 
 - [ ] Swagger UI:
   ```
-  https://api.errorwatch.com/swagger-ui.html
+  https://api.bugshot.com/swagger-ui.html
   ```
 
 ### 7.2 프론트엔드 테스트
 
-- [ ] 프론트엔드 접속: `https://errorwatch.com`
+- [ ] 프론트엔드 접속: `https://bugshot.com`
 - [ ] 회원가입 테스트
 - [ ] 로그인 테스트
 - [ ] 프로젝트 생성 테스트
@@ -239,9 +246,9 @@ JWT_SECRET=________________________
 
 - [ ] [UptimeRobot](https://uptimerobot.com) 계정 생성
 - [ ] Monitor 추가:
-  - Name: ErrorWatch API
+  - Name: BugShot API
   - Type: HTTP(s)
-  - URL: `https://api.errorwatch.com/actuator/health`
+  - URL: `https://api.bugshot.com/actuator/health`
   - Interval: 5분
 - [ ] Alert Contact 설정 (이메일)
 - [ ] 테스트 알림 확인

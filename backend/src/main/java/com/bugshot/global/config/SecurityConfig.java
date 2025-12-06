@@ -1,5 +1,7 @@
 package com.bugshot.global.config;
 
+import com.bugshot.global.security.UserIdAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,15 +9,28 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Spring Security 설정
+ *
+ * 인증 흐름:
+ * 1. Frontend(NextAuth)에서 GitHub/Google OAuth 처리
+ * 2. 로그인 성공 시 /api/auth/oauth 호출하여 백엔드에 사용자 등록
+ * 3. 이후 API 요청 시 X-User-Id 헤더로 사용자 식별
+ * 4. UserIdAuthenticationFilter가 헤더를 읽어 Authentication 설정
+ */
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final UserIdAuthenticationFilter userIdAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -38,9 +53,9 @@ public class SecurityConfig {
 
                 // Require authentication for all other endpoints
                 .anyRequest().authenticated()
-            );
-        // Note: OAuth2 인증은 Frontend(NextAuth)에서 처리
-        // 백엔드는 X-User-Id 헤더로 사용자 식별
+            )
+            // X-User-Id 헤더 기반 인증 필터 추가
+            .addFilterBefore(userIdAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

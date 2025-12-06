@@ -67,25 +67,10 @@ spring:
       time-to-live: 600000 # 10 minutes in milliseconds
       cache-null-values: false
       use-key-prefix: true
-      key-prefix: "errorwatch:"
+      key-prefix: "bugshot:"
 
-  # Security OAuth2
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: ${GITHUB_CLIENT_ID:your-client-id}
-            client-secret: ${GITHUB_CLIENT_SECRET:your-client-secret}
-            scope:
-              - user:email
-              - read:user
-          google:
-            client-id: ${GOOGLE_CLIENT_ID:your-client-id}
-            client-secret: ${GOOGLE_CLIENT_SECRET:your-client-secret}
-            scope:
-              - email
-              - profile
+  # Note: OAuth2 인증은 Frontend(NextAuth)에서 처리
+  # 백엔드는 X-User-Id 헤더로 사용자를 식별합니다
 
 # Server Port (8081 - 8080은 다른 프로젝트에서 사용 중)
 server:
@@ -108,10 +93,13 @@ app:
   frontend:
     base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
 
+  # Internal API Secret (for BFF pattern - server-to-server authentication)
+  internal-api-secret: ${INTERNAL_API_SECRET:}
+
   # Email Notification
   email:
-    from: ${EMAIL_FROM:noreply@errorwatch.io}
-    from-name: ${EMAIL_FROM_NAME:ErrorWatch}
+    from: ${EMAIL_FROM:noreply@bugshot.io}
+    from-name: ${EMAIL_FROM_NAME:BugShot}
 
   # Discord Bot
   discord:
@@ -124,11 +112,6 @@ app:
       bucket-name: ${CLOUDFLARE_R2_BUCKET:bugshot-replays}
       access-key: ${CLOUDFLARE_R2_ACCESS_KEY:}
       secret-key: ${CLOUDFLARE_R2_SECRET_KEY:}
-
-  # JWT
-  jwt:
-    secret: ${JWT_SECRET:your-secret-key-change-this-in-production}
-    expiration: 86400000 # 24 hours
 
   # Session Replay
   session-replay:

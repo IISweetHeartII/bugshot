@@ -13,30 +13,28 @@ import type {
   IngestRequest,
 } from '@/types/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
-
+/**
+ * API Client using BFF pattern
+ *
+ * 모든 API 요청은 Next.js API Routes를 통해 처리됩니다.
+ * 인증은 서버 사이드에서 NextAuth 세션을 통해 자동으로 처리되므로,
+ * 클라이언트에서는 별도의 인증 헤더를 보내지 않습니다.
+ *
+ * 보안:
+ * - X-User-Id 헤더는 더 이상 클라이언트에서 직접 설정하지 않습니다
+ * - 모든 인증은 Next.js 서버에서 처리됩니다
+ */
 class ApiClient {
   private client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: '',  // Use relative paths - all routes go to Next.js API Routes
       headers: {
         'Content-Type': 'application/json',
       },
-      withCredentials: true, // For cookies/sessions
+      withCredentials: true,
     });
-
-    // Request interceptor for authentication
-    this.client.interceptors.request.use(
-      (config) => {
-        // Token will be added by NextAuth if needed
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
 
     // Response interceptor for error handling
     this.client.interceptors.response.use(
@@ -244,3 +242,15 @@ class ApiClient {
 }
 
 export const api = new ApiClient();
+
+/**
+ * Initialize API client
+ *
+ * Note: BFF 패턴에서는 인증이 서버 사이드에서 자동으로 처리되므로,
+ * 이 함수는 하위 호환성을 위해 유지되지만 더 이상 아무 작업도 하지 않습니다.
+ *
+ * @deprecated BFF 패턴에서는 더 이상 필요하지 않습니다
+ */
+export function initializeApi(_userId: string | null) {
+  // No-op: Authentication is now handled server-side via BFF pattern
+}

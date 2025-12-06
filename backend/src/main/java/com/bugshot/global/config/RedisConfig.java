@@ -24,7 +24,7 @@ public class RedisConfig {
     /**
      * Redis CacheManager 설정
      * - TTL: 10분
-     * - Key Prefix: errorwatch:
+     * - Key Prefix: bugshot:
      */
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {

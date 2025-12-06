@@ -1,15 +1,15 @@
 /**
- * ErrorWatch SDK Types
+ * BugShot SDK Types
  */
 
-export interface ErrorWatchConfig {
+export interface BugShotConfig {
   /**
    * API 키 (필수)
    */
   apiKey: string;
 
   /**
-   * API 엔드포인트 (기본값: https://api.errorwatch.com)
+   * API 엔드포인트 (기본값: https://api.bugshot.com)
    */
   endpoint?: string;
 

@@ -1,10 +1,10 @@
-# ErrorWatch SDK 개발 가이드
+# BugShot SDK 개발 가이드
 
 ## 📦 SDK 구조
 
 ```
 packages/
-├── sdk/                    # @errorwatch/browser-sdk (바닐라 JS)
+├── sdk/                    # @bugshot/browser-sdk (바닐라 JS)
 │   ├── src/
 │   │   ├── types.ts       # TypeScript 타입 정의
 │   │   ├── utils.ts       # 유틸리티 함수
@@ -19,10 +19,10 @@ packages/
 │   ├── tsconfig.json
 │   └── rollup.config.js
 │
-├── react/                 # @errorwatch/react
+├── react/                 # @bugshot/react
 │   ├── src/
 │   │   ├── ErrorBoundary.tsx      # React Error Boundary
-│   │   ├── ErrorWatchProvider.tsx # Provider 컴포넌트
+│   │   ├── BugShotProvider.tsx # Provider 컴포넌트
 │   │   ├── hooks.ts               # React Hooks
 │   │   └── index.tsx              # 엔트리포인트
 │   ├── dist/
@@ -59,7 +59,7 @@ npm run build
 # 결과물:
 # - dist/index.esm.js        (ES Module - NPM용)
 # - dist/index.cjs.js        (CommonJS - NPM용)
-# - dist/errorwatch.min.js   (IIFE - CDN용)
+# - dist/bugshot.min.js   (IIFE - CDN용)
 # - dist/index.d.ts          (TypeScript 정의)
 
 # React 플러그인 빌드
@@ -95,7 +95,7 @@ npm version major  # 1.0.0 → 2.0.0
 npm publish --access public
 
 # NPM에 업로드됨:
-# https://www.npmjs.com/package/@errorwatch/browser-sdk
+# https://www.npmjs.com/package/@bugshot/browser-sdk
 ```
 
 ### React 플러그인 배포
@@ -106,22 +106,22 @@ cd packages/react
 npm version patch
 npm publish --access public
 
-# https://www.npmjs.com/package/@errorwatch/react
+# https://www.npmjs.com/package/@bugshot/react
 ```
 
 ## 📡 CDN 배포
 
-빌드된 `packages/sdk/dist/errorwatch.min.js` 파일을:
+빌드된 `packages/sdk/dist/bugshot.min.js` 파일을:
 
 1. **Cloudflare Pages/Workers** 또는 **Vercel**에 업로드
 2. **jsDelivr** 사용:
    ```
-   https://cdn.jsdelivr.net/npm/@errorwatch/browser-sdk@1.0.0/dist/errorwatch.min.js
+   https://cdn.jsdelivr.net/npm/@bugshot/browser-sdk@1.0.0/dist/bugshot.min.js
    ```
 
 3. **unpkg** 사용:
    ```
-   https://unpkg.com/@errorwatch/browser-sdk@1.0.0/dist/errorwatch.min.js
+   https://unpkg.com/@bugshot/browser-sdk@1.0.0/dist/bugshot.min.js
    ```
 
 ## 🧪 테스트
@@ -155,11 +155,11 @@ cd ../react
 npm link
 
 cd ../../test-app
-npm link @errorwatch/browser-sdk
-npm link @errorwatch/react
+npm link @bugshot/browser-sdk
+npm link @bugshot/react
 
 # 앱에서 사용
-# import { ErrorBoundary } from '@errorwatch/react';
+# import { ErrorBoundary } from '@bugshot/react';
 ```
 
 ## 📝 사용 예제
@@ -170,9 +170,9 @@ npm link @errorwatch/react
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://cdn.errorwatch.com/sdk/1.0.0/errorwatch.min.js"></script>
+  <script src="https://cdn.bugshot.com/sdk/1.0.0/bugshot.min.js"></script>
   <script>
-    ErrorWatch.init({
+    BugShot.init({
       apiKey: 'ew_your_api_key_here',
       environment: 'production'
     });
@@ -187,19 +187,19 @@ npm link @errorwatch/react
 ### 2. NPM (React)
 
 ```bash
-npm install @errorwatch/react @errorwatch/browser-sdk
+npm install @bugshot/react @bugshot/browser-sdk
 ```
 
 ```tsx
-import { ErrorWatchProvider, ErrorBoundary } from '@errorwatch/react';
+import { BugShotProvider, ErrorBoundary } from '@bugshot/react';
 
 function App() {
   return (
-    <ErrorWatchProvider config={{ apiKey: 'ew_your_key' }}>
+    <BugShotProvider config={{ apiKey: 'ew_your_key' }}>
       <ErrorBoundary>
         <YourApp />
       </ErrorBoundary>
-    </ErrorWatchProvider>
+    </BugShotProvider>
   );
 }
 ```
@@ -207,13 +207,13 @@ function App() {
 ### 3. NPM (바닐라 JS)
 
 ```bash
-npm install @errorwatch/browser-sdk
+npm install @bugshot/browser-sdk
 ```
 
 ```javascript
-import ErrorWatch from '@errorwatch/browser-sdk';
+import BugShot from '@bugshot/browser-sdk';
 
-ErrorWatch.init({
+BugShot.init({
   apiKey: 'ew_your_key',
   environment: 'production',
   release: '1.0.0'
@@ -223,7 +223,7 @@ ErrorWatch.init({
 try {
   riskyOperation();
 } catch (error) {
-  ErrorWatch.captureError(error);
+  BugShot.captureError(error);
 }
 ```
 
@@ -255,7 +255,7 @@ try {
 ## 🔧 설정 옵션
 
 ```typescript
-ErrorWatch.init({
+BugShot.init({
   // 필수
   apiKey: 'ew_...',
 
@@ -287,22 +287,22 @@ ErrorWatch.init({
 
 ## 📊 API 참고
 
-### ErrorWatch.init(config)
+### BugShot.init(config)
 SDK 초기화
 
-### ErrorWatch.captureError(error, additionalInfo?)
+### BugShot.captureError(error, additionalInfo?)
 에러 캡처
 
-### ErrorWatch.captureMessage(message, level?)
+### BugShot.captureMessage(message, level?)
 메시지 캡처
 
-### ErrorWatch.setUser(user)
+### BugShot.setUser(user)
 사용자 정보 설정
 
-### ErrorWatch.setContext(key, value)
+### BugShot.setContext(key, value)
 커스텀 컨텍스트 추가
 
-### ErrorWatch.close()
+### BugShot.close()
 SDK 종료
 
 ## 🐛 문제 해결
@@ -310,7 +310,7 @@ SDK 종료
 ### SDK가 초기화되지 않음
 ```javascript
 // 디버그 모드 활성화
-ErrorWatch.init({
+BugShot.init({
   apiKey: 'your-key',
   debug: true  // 콘솔에 로그 출력
 });
@@ -332,4 +332,4 @@ npm install --save-dev @types/node
 
 - [API 문서](http://localhost:8081/swagger-ui.html)
 - [대시보드](http://localhost:3000/dashboard)
-- [GitHub](https://github.com/errorwatch/errorwatch)
+- [GitHub](https://github.com/bugshot/bugshot)

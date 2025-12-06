@@ -1,18 +1,18 @@
 /**
- * ErrorWatch Error Capture System
+ * BugShot Error Capture System
  */
 
-import type { CapturedError, ErrorContext, ErrorWatchConfig } from './types';
+import type { CapturedError, ErrorContext, BugShotConfig } from './types';
 import { getBrowserInfo, getDeviceInfo, parseStackTrace, generateUUID } from './utils';
 
 export class ErrorCapture {
-  private config: ErrorWatchConfig;
+  private config: BugShotConfig;
   private sessionId: string;
   private listeners: Array<(error: CapturedError, context: ErrorContext) => void> = [];
   private originalErrorHandler: OnErrorEventHandler = null;
   private originalRejectionHandler: ((event: PromiseRejectionEvent) => void) | null = null;
 
-  constructor(config: ErrorWatchConfig) {
+  constructor(config: BugShotConfig) {
     this.config = config;
     this.sessionId = generateUUID();
   }
@@ -127,7 +127,7 @@ export class ErrorCapture {
       try {
         listener(finalError, context);
       } catch (err) {
-        console.error('Error in ErrorWatch listener:', err);
+        console.error('Error in BugShot listener:', err);
       }
     });
   }

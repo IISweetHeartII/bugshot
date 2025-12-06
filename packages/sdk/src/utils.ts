@@ -128,6 +128,6 @@ export function safeStringify(obj: any): string {
  */
 export function log(debug: boolean, ...args: any[]): void {
   if (debug) {
-    console.log('[ErrorWatch]', ...args);
+    console.log('[BugShot]', ...args);
   }
 }

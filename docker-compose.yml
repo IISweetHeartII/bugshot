@@ -83,20 +83,14 @@ services:
       # Discord Bot
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
 
-      # OAuth2
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-
-      # JWT
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-
       # Email
       MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+
+      # Internal API Secret (BFF Pattern)
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-}
 
       # JVM 옵션
       JAVA_OPTS: -Xms512m -Xmx1024m

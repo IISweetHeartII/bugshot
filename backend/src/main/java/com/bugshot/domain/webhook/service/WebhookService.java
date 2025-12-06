@@ -124,9 +124,9 @@ public class WebhookService {
      */
     private void sendTestMessage(WebhookConfig config) {
         Map<String, Object> payload = switch (config.getType()) {
-            case DISCORD -> createDiscordPayload("✅ 웹훅 테스트", "ErrorWatch 웹훅이 정상적으로 작동합니다!");
-            case SLACK -> createSlackPayload("✅ 웹훅 테스트", "ErrorWatch 웹훅이 정상적으로 작동합니다!");
-            default -> Map.of("text", "✅ ErrorWatch 웹훅 테스트");
+            case DISCORD -> createDiscordPayload("✅ 웹훅 테스트", "BugShot 웹훅이 정상적으로 작동합니다!");
+            case SLACK -> createSlackPayload("✅ 웹훅 테스트", "BugShot 웹훅이 정상적으로 작동합니다!");
+            default -> Map.of("text", "✅ BugShot 웹훅 테스트");
         };
 
         webClient.post()

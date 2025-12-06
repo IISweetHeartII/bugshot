@@ -146,7 +146,7 @@ public class DiscordBotService {
             .addField("👥 영향받은 사용자", data.getAffectedUsers() + "명", true)
             .addField("🌐 URL", data.getUrl(), false)
             .setTimestamp(java.time.Instant.now())
-            .setFooter("ErrorWatch", null);
+            .setFooter("BugShot", null);
 
         return builder.build();
     }

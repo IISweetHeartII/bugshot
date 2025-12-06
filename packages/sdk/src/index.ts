@@ -1,11 +1,11 @@
 /**
- * ErrorWatch Browser SDK
+ * BugShot Browser SDK
  *
  * @example
  * ```typescript
- * import ErrorWatch from '@errorwatch/browser-sdk';
+ * import BugShot from '@bugshot/browser-sdk';
  *
- * ErrorWatch.init({
+ * BugShot.init({
  *   apiKey: 'your-api-key',
  *   environment: 'production',
  *   release: '1.0.0'
@@ -13,22 +13,22 @@
  * ```
  */
 
-import { ErrorWatchClient } from './client';
-import type { ErrorWatchConfig, UserInfo } from './types';
+import { BugShotClient } from './client';
+import type { BugShotConfig, UserInfo } from './types';
 
 // Singleton instance
-let globalClient: ErrorWatchClient | null = null;
+let globalClient: BugShotClient | null = null;
 
 /**
- * ErrorWatch SDK 초기화
+ * BugShot SDK 초기화
  */
-export function init(config: ErrorWatchConfig): ErrorWatchClient {
+export function init(config: BugShotConfig): BugShotClient {
   if (globalClient) {
-    console.warn('ErrorWatch is already initialized');
+    console.warn('BugShot is already initialized');
     return globalClient;
   }
 
-  globalClient = new ErrorWatchClient(config);
+  globalClient = new BugShotClient(config);
   globalClient.init();
 
   return globalClient;
@@ -39,7 +39,7 @@ export function init(config: ErrorWatchConfig): ErrorWatchClient {
  */
 export function captureError(error: Error | string, additionalInfo?: any): void {
   if (!globalClient) {
-    console.warn('ErrorWatch is not initialized. Call init() first.');
+    console.warn('BugShot is not initialized. Call init() first.');
     return;
   }
   globalClient.captureError(error, additionalInfo);
@@ -50,7 +50,7 @@ export function captureError(error: Error | string, additionalInfo?: any): void 
  */
 export function captureMessage(message: string, level?: 'info' | 'warning' | 'error'): void {
   if (!globalClient) {
-    console.warn('ErrorWatch is not initialized. Call init() first.');
+    console.warn('BugShot is not initialized. Call init() first.');
     return;
   }
   globalClient.captureMessage(message, level);
@@ -61,7 +61,7 @@ export function captureMessage(message: string, level?: 'info' | 'warning' | 'er
  */
 export function setUser(user: UserInfo | null): void {
   if (!globalClient) {
-    console.warn('ErrorWatch is not initialized. Call init() first.');
+    console.warn('BugShot is not initialized. Call init() first.');
     return;
   }
   globalClient.setUser(user);
@@ -72,7 +72,7 @@ export function setUser(user: UserInfo | null): void {
  */
 export function setContext(key: string, value: any): void {
   if (!globalClient) {
-    console.warn('ErrorWatch is not initialized. Call init() first.');
+    console.warn('BugShot is not initialized. Call init() first.');
     return;
   }
   globalClient.setContext(key, value);
@@ -81,7 +81,7 @@ export function setContext(key: string, value: any): void {
 /**
  * 현재 클라이언트 인스턴스 가져오기
  */
-export function getCurrentClient(): ErrorWatchClient | null {
+export function getCurrentClient(): BugShotClient | null {
   return globalClient;
 }
 
@@ -96,8 +96,8 @@ export function close(): void {
 }
 
 // Named exports
-export { ErrorWatchClient };
-export type { ErrorWatchConfig, UserInfo };
+export { BugShotClient };
+export type { BugShotConfig, UserInfo };
 
 // Default export (functional API)
 export default {

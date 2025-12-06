@@ -45,7 +45,7 @@ export default function DashboardLayout({
               <span className="text-xl">⚡</span>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-text-primary">ErrorWatch</h1>
+              <h1 className="text-lg font-bold text-text-primary">BugShot</h1>
               <p className="text-xs text-text-muted">Error Monitoring</p>
             </div>
           </div>

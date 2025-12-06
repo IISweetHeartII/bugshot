@@ -1,8 +1,8 @@
-# @errorwatch/react
+# @bugshot/react
 
-Official ErrorWatch integration for React applications.
+Official BugShot integration for React applications.
 
-[![npm version](https://badge.fury.io/js/%40errorwatch%2Freact.svg)](https://www.npmjs.com/package/@errorwatch/react)
+[![npm version](https://badge.fury.io/js/%40bugshot%2Freact.svg)](https://www.npmjs.com/package/@bugshot/react)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Features
@@ -17,7 +17,7 @@ Official ErrorWatch integration for React applications.
 ## 📦 Installation
 
 ```bash
-npm install @errorwatch/react @errorwatch/browser-sdk
+npm install @bugshot/react @bugshot/browser-sdk
 ```
 
 ## 🔧 Quick Start
@@ -25,15 +25,15 @@ npm install @errorwatch/react @errorwatch/browser-sdk
 ### 1. Basic Setup with Provider
 
 ```tsx
-import { ErrorWatchProvider, ErrorBoundary } from '@errorwatch/react';
+import { BugShotProvider, ErrorBoundary } from '@bugshot/react';
 
 function App() {
   return (
-    <ErrorWatchProvider config={{ apiKey: 'your-api-key' }}>
+    <BugShotProvider config={{ apiKey: 'your-api-key' }}>
       <ErrorBoundary>
         <YourApp />
       </ErrorBoundary>
-    </ErrorWatchProvider>
+    </BugShotProvider>
   );
 }
 ```
@@ -41,11 +41,11 @@ function App() {
 ### 2. Error Boundary Only
 
 ```tsx
-import { ErrorBoundary } from '@errorwatch/react';
-import ErrorWatch from '@errorwatch/browser-sdk';
+import { ErrorBoundary } from '@bugshot/react';
+import BugShot from '@bugshot/browser-sdk';
 
 // Initialize SDK first
-ErrorWatch.init({ apiKey: 'your-api-key' });
+BugShot.init({ apiKey: 'your-api-key' });
 
 function App() {
   return (
@@ -95,10 +95,10 @@ function App() {
 ### Using Hooks
 
 ```tsx
-import { useErrorWatch } from '@errorwatch/react';
+import { useBugShot } from '@bugshot/react';
 
 function MyComponent() {
-  const { captureError, captureMessage, setUser } = useErrorWatch();
+  const { captureError, captureMessage, setUser } = useBugShot();
 
   const handleClick = async () => {
     try {
@@ -127,20 +127,20 @@ function MyComponent() {
 // app/providers.tsx
 'use client';
 
-import { ErrorWatchProvider, ErrorBoundary } from '@errorwatch/react';
+import { BugShotProvider, ErrorBoundary } from '@bugshot/react';
 
 export function Providers({ children }) {
   return (
-    <ErrorWatchProvider
+    <BugShotProvider
       config={{
-        apiKey: process.env.NEXT_PUBLIC_ERRORWATCH_API_KEY!,
+        apiKey: process.env.NEXT_PUBLIC_BUGSHOT_API_KEY!,
         environment: process.env.NODE_ENV
       }}
     >
       <ErrorBoundary>
         {children}
       </ErrorBoundary>
-    </ErrorWatchProvider>
+    </BugShotProvider>
   );
 }
 ```
@@ -164,13 +164,13 @@ export default function RootLayout({ children }) {
 
 ```tsx
 // pages/_app.tsx
-import { ErrorWatchProvider, ErrorBoundary } from '@errorwatch/react';
+import { BugShotProvider, ErrorBoundary } from '@bugshot/react';
 
 function MyApp({ Component, pageProps }) {
   return (
-    <ErrorWatchProvider
+    <BugShotProvider
       config={{
-        apiKey: process.env.NEXT_PUBLIC_ERRORWATCH_API_KEY!,
+        apiKey: process.env.NEXT_PUBLIC_BUGSHOT_API_KEY!,
         environment: process.env.NODE_ENV,
         release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA
       }}
@@ -178,7 +178,7 @@ function MyApp({ Component, pageProps }) {
       <ErrorBoundary>
         <Component {...pageProps} />
       </ErrorBoundary>
-    </ErrorWatchProvider>
+    </BugShotProvider>
   );
 }
 
@@ -187,18 +187,18 @@ export default MyApp;
 
 ## 🎯 API Reference
 
-### `<ErrorWatchProvider>`
+### `<BugShotProvider>`
 
-Provider component to initialize ErrorWatch SDK.
+Provider component to initialize BugShot SDK.
 
 **Props:**
-- `config` (ErrorWatchConfig): SDK configuration
+- `config` (BugShotConfig): SDK configuration
 - `children` (ReactNode): Child components
 
 ```tsx
-<ErrorWatchProvider config={{ apiKey: 'your-key' }}>
+<BugShotProvider config={{ apiKey: 'your-key' }}>
   <App />
-</ErrorWatchProvider>
+</BugShotProvider>
 ```
 
 ### `<ErrorBoundary>`
@@ -209,7 +209,7 @@ React Error Boundary component.
 - `children` (ReactNode): Components to monitor
 - `fallback` (ReactNode | Function): Fallback UI to show on error
 - `onError` (Function): Callback when error occurs
-- `reportToErrorWatch` (boolean): Send errors to ErrorWatch (default: true)
+- `reportToBugShot` (boolean): Send errors to BugShot (default: true)
 
 ```tsx
 <ErrorBoundary
@@ -222,7 +222,7 @@ React Error Boundary component.
 </ErrorBoundary>
 ```
 
-### `useErrorWatch()`
+### `useBugShot()`
 
 React Hook for error tracking in functional components.
 
@@ -233,7 +233,7 @@ React Hook for error tracking in functional components.
 - `setContext(key, value)`: Add context
 
 ```tsx
-const { captureError, captureMessage, setUser, setContext } = useErrorWatch();
+const { captureError, captureMessage, setUser, setContext } = useBugShot();
 ```
 
 ## 🛠️ TypeScript
@@ -241,9 +241,9 @@ const { captureError, captureMessage, setUser, setContext } = useErrorWatch();
 Full TypeScript support included:
 
 ```tsx
-import type { ErrorWatchConfig } from '@errorwatch/react';
+import type { BugShotConfig } from '@bugshot/react';
 
-const config: ErrorWatchConfig = {
+const config: BugShotConfig = {
   apiKey: 'your-api-key',
   environment: 'production',
   release: '1.0.0'
@@ -252,10 +252,10 @@ const config: ErrorWatchConfig = {
 
 ## 📝 License
 
-MIT © ErrorWatch Team
+MIT © BugShot Team
 
 ## 🔗 Links
 
-- [Documentation](https://docs.errorwatch.com)
+- [Documentation](https://docs.bugshot.com)
 - [Browser SDK](../sdk)
-- [GitHub](https://github.com/errorwatch/errorwatch)
+- [GitHub](https://github.com/bugshot/bugshot)

@@ -1,21 +1,21 @@
 /**
- * ErrorWatch React Example
+ * BugShot React Example
  *
  * 설치:
- * npm install @errorwatch/react @errorwatch/browser-sdk
+ * npm install @bugshot/react @bugshot/browser-sdk
  */
 
 import React, { useState } from 'react';
-import { ErrorWatchProvider, ErrorBoundary, useErrorWatch } from '@errorwatch/react';
+import { BugShotProvider, ErrorBoundary, useBugShot } from '@bugshot/react';
 
 // 1. 기본 사용법
 function BasicExample() {
   return (
-    <ErrorWatchProvider config={{ apiKey: 'your-api-key' }}>
+    <BugShotProvider config={{ apiKey: 'your-api-key' }}>
       <ErrorBoundary>
         <App />
       </ErrorBoundary>
-    </ErrorWatchProvider>
+    </BugShotProvider>
   );
 }
 
@@ -44,7 +44,7 @@ function CustomFallbackExample() {
 
 // 3. Hook 사용 예제
 function HookExample() {
-  const { captureError, captureMessage, setUser } = useErrorWatch();
+  const { captureError, captureMessage, setUser } = useBugShot();
   const [data, setData] = useState(null);
 
   const fetchData = async () => {
@@ -85,9 +85,9 @@ function HookExample() {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ErrorWatchProvider
+    <BugShotProvider
       config={{
-        apiKey: process.env.NEXT_PUBLIC_ERRORWATCH_API_KEY!,
+        apiKey: process.env.NEXT_PUBLIC_BUGSHOT_API_KEY!,
         environment: process.env.NODE_ENV,
         release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
         enableSessionReplay: true
@@ -103,7 +103,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       >
         {children}
       </ErrorBoundary>
-    </ErrorWatchProvider>
+    </BugShotProvider>
   );
 }
 
@@ -122,7 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 // 5. 실전 예제: 쇼핑몰 체크아웃
 function CheckoutPage() {
-  const { captureError, captureMessage, setContext } = useErrorWatch();
+  const { captureError, captureMessage, setContext } = useBugShot();
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async (cartItems: any[], totalAmount: number) => {

@@ -49,31 +49,17 @@ DB_PW=${{ secrets.DB_PW }}
 # Spring Profile
 SPRING_PROFILES_ACTIVE=prod
 
-# JWT
-JWT_SECRET=${{ secrets.JWT_SECRET }}
-
 # Cloudflare R2
 CLOUDFLARE_R2_ACCOUNT_ID=${{ secrets.CLOUDFLARE_R2_ACCOUNT_ID }}
 CLOUDFLARE_R2_BUCKET=${{ secrets.CLOUDFLARE_R2_BUCKET }}
 CLOUDFLARE_R2_ACCESS_KEY=${{ secrets.CLOUDFLARE_R2_ACCESS_KEY }}
 CLOUDFLARE_R2_SECRET_KEY=${{ secrets.CLOUDFLARE_R2_SECRET_KEY }}
 
-# Discord Bot
-DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}
-
-# OAuth2
-GITHUB_CLIENT_ID=${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
-GITHUB_CLIENT_SECRET=${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
-GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-
-# Email
-MAIL_HOST=${{ secrets.MAIL_HOST }}
-MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-
 # Frontend URL
 FRONTEND_BASE_URL=https://bugshot.log8.kr
+
+# Internal API Secret (BFF Pattern)
+INTERNAL_API_SECRET=${{ secrets.INTERNAL_API_SECRET }}
 ENVEOF
           
           echo "✅ .env file created successfully!"

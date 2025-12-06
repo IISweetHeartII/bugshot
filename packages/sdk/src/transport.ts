@@ -1,5 +1,5 @@
 /**
- * ErrorWatch Transport - 서버로 데이터 전송
+ * BugShot Transport - 서버로 데이터 전송
  */
 
 import type { IngestPayload } from './types';
@@ -21,7 +21,7 @@ export class Transport {
    */
   async send(payload: IngestPayload): Promise<boolean> {
     try {
-      log(this.debug, 'Sending error to ErrorWatch...', payload);
+      log(this.debug, 'Sending error to BugShot...', payload);
 
       const response = await fetch(`${this.endpoint}/api/ingest`, {
         method: 'POST',

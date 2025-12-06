@@ -45,9 +45,9 @@ export default [
   {
     input: 'src/browser.ts',
     output: {
-      file: 'dist/errorwatch.min.js',
+      file: 'dist/bugshot.min.js',
       format: 'iife',
-      name: 'ErrorWatch',
+      name: 'BugShot',
       sourcemap: true,
     },
     plugins: [

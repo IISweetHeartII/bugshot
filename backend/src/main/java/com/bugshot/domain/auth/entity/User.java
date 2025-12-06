@@ -58,9 +58,9 @@ public class User extends BaseEntity {
     // Business Methods
     public boolean canCreateProject() {
         return switch (planType) {
-            case FREE -> projects.size() < 1;
-            case PRO -> projects.size() < 3;
-            case TEAM -> projects.size() < 10;
+            case FREE -> projects.size() < 3;
+            case PRO -> projects.size() < 10;
+            case TEAM -> projects.size() < 50;
         };
     }
 

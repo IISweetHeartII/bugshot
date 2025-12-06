@@ -1,12 +1,12 @@
 /**
- * ErrorWatch Browser (IIFE) Bundle
- * CDN 배포용 - window.ErrorWatch로 접근
+ * BugShot Browser (IIFE) Bundle
+ * CDN 배포용 - window.BugShot로 접근
  */
 
 import { init, captureError, captureMessage, setUser, setContext, close } from './index';
 
 // Global API
-const ErrorWatch = {
+const BugShot = {
   init,
   captureError,
   captureMessage,
@@ -17,7 +17,7 @@ const ErrorWatch = {
 
 // Export to window
 if (typeof window !== 'undefined') {
-  (window as any).ErrorWatch = ErrorWatch;
+  (window as any).BugShot = BugShot;
 }
 
-export default ErrorWatch;
+export default BugShot;

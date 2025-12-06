@@ -1,18 +1,18 @@
 /**
- * ErrorWatch React Hooks
+ * BugShot React Hooks
  */
 
 import { useCallback } from 'react';
-import ErrorWatch from '@errorwatch/browser-sdk';
+import BugShot from '@bugshot/browser-sdk';
 
 /**
- * ErrorWatch Hook
+ * BugShot Hook
  * 에러 캡처 함수를 제공하는 Hook
  *
  * @example
  * ```tsx
  * function MyComponent() {
- *   const { captureError, captureMessage } = useErrorWatch();
+ *   const { captureError, captureMessage } = useBugShot();
  *
  *   const handleClick = async () => {
  *     try {
@@ -26,24 +26,24 @@ import ErrorWatch from '@errorwatch/browser-sdk';
  * }
  * ```
  */
-export function useErrorWatch() {
+export function useBugShot() {
   const captureError = useCallback((error: Error | string, additionalInfo?: any) => {
-    ErrorWatch.captureError(error, additionalInfo);
+    BugShot.captureError(error, additionalInfo);
   }, []);
 
   const captureMessage = useCallback(
     (message: string, level?: 'info' | 'warning' | 'error') => {
-      ErrorWatch.captureMessage(message, level);
+      BugShot.captureMessage(message, level);
     },
     []
   );
 
   const setUser = useCallback((user: any) => {
-    ErrorWatch.setUser(user);
+    BugShot.setUser(user);
   }, []);
 
   const setContext = useCallback((key: string, value: any) => {
-    ErrorWatch.setContext(key, value);
+    BugShot.setContext(key, value);
   }, []);
 
   return {

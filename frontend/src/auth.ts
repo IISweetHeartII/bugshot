@@ -20,8 +20,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       // Send user info to backend for registration/login
+      // Note: This runs server-side, so we use BACKEND_URL (not NEXT_PUBLIC_*)
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth`, {
+        const response = await fetch(`${process.env.BACKEND_URL}/api/auth/oauth`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -40,17 +41,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return false;
         }
 
+        // Get backend user ID from response and store it
+        const data = await response.json();
+        if (data.success && data.data?.user?.id) {
+          // Store backend user ID for jwt callback
+          (user as any).backendId = data.data.user.id;
+        }
+
         return true;
       } catch (error) {
         console.error("Error during sign in:", error);
         return false;
       }
     },
-    async jwt({ token, account }) {
-      // Persist the OAuth access_token to the token right after signin
-      if (account) {
-        token.accessToken = account.access_token;
-        token.provider = account.provider;
+    async jwt({ token, user, account }) {
+      // Persist the backend user ID and provider to the token
+      if (account && user) {
+        (token as any).provider = account.provider;
+        (token as any).backendId = (user as any).backendId || user.id;
       }
       return token;
     },
@@ -60,7 +68,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         ...session,
         user: {
           ...session.user,
-          provider: token.provider as string,
+          id: (token as any).backendId || "",
+          provider: (token as any).provider || "",
         },
       };
     },

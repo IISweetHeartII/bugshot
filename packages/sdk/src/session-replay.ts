@@ -1,5 +1,5 @@
 /**
- * ErrorWatch Session Replay
+ * BugShot Session Replay
  * 사용자 행동 녹화 (간단 버전)
  */
 

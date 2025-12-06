@@ -1,8 +1,8 @@
-# @errorwatch/browser-sdk
+# @bugshot/browser-sdk
 
-Official ErrorWatch SDK for JavaScript/TypeScript applications.
+Official BugShot SDK for JavaScript/TypeScript applications.
 
-[![npm version](https://badge.fury.io/js/%40errorwatch%2Fbrowser-sdk.svg)](https://www.npmjs.com/package/@errorwatch/browser-sdk)
+[![npm version](https://badge.fury.io/js/%40bugshot%2Fbrowser-sdk.svg)](https://www.npmjs.com/package/@bugshot/browser-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Features
@@ -21,21 +21,21 @@ Official ErrorWatch SDK for JavaScript/TypeScript applications.
 ### NPM
 
 ```bash
-npm install @errorwatch/browser-sdk
+npm install @bugshot/browser-sdk
 ```
 
 ### Yarn
 
 ```bash
-yarn add @errorwatch/browser-sdk
+yarn add @bugshot/browser-sdk
 ```
 
 ### CDN
 
 ```html
-<script src="https://cdn.errorwatch.com/sdk/1.0.0/errorwatch.min.js"></script>
+<script src="https://cdn.bugshot.com/sdk/1.0.0/bugshot.min.js"></script>
 <script>
-  ErrorWatch.init({
+  BugShot.init({
     apiKey: 'your-api-key-here'
   });
 </script>
@@ -46,9 +46,9 @@ yarn add @errorwatch/browser-sdk
 ### Basic Setup
 
 ```typescript
-import ErrorWatch from '@errorwatch/browser-sdk';
+import BugShot from '@bugshot/browser-sdk';
 
-ErrorWatch.init({
+BugShot.init({
   apiKey: 'your-api-key-here',
   environment: 'production',
   release: '1.0.0'
@@ -58,12 +58,12 @@ ErrorWatch.init({
 ### Configuration Options
 
 ```typescript
-ErrorWatch.init({
+BugShot.init({
   // Required
   apiKey: 'your-api-key-here',
 
   // Optional
-  endpoint: 'https://api.errorwatch.com', // Default
+  endpoint: 'https://api.bugshot.com', // Default
   environment: 'production', // 'development', 'staging', etc.
   release: '1.0.0', // Your app version
   enableSessionReplay: true, // Record user sessions
@@ -97,21 +97,21 @@ ErrorWatch.init({
 try {
   riskyOperation();
 } catch (error) {
-  ErrorWatch.captureError(error);
+  BugShot.captureError(error);
 }
 ```
 
 ### Capture Messages
 
 ```typescript
-ErrorWatch.captureMessage('User clicked checkout button', 'info');
-ErrorWatch.captureMessage('Payment failed', 'error');
+BugShot.captureMessage('User clicked checkout button', 'info');
+BugShot.captureMessage('Payment failed', 'error');
 ```
 
 ### Set User Context
 
 ```typescript
-ErrorWatch.setUser({
+BugShot.setUser({
   id: '12345',
   email: 'user@example.com',
   username: 'john_doe',
@@ -122,8 +122,8 @@ ErrorWatch.setUser({
 ### Add Custom Context
 
 ```typescript
-ErrorWatch.setContext('purchase_id', 'order-123');
-ErrorWatch.setContext('cart_value', 99.99);
+BugShot.setContext('purchase_id', 'order-123');
+BugShot.setContext('cart_value', 99.99);
 ```
 
 ### Vanilla JavaScript
@@ -132,9 +132,9 @@ ErrorWatch.setContext('cart_value', 99.99);
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://cdn.errorwatch.com/sdk/1.0.0/errorwatch.min.js"></script>
+  <script src="https://cdn.bugshot.com/sdk/1.0.0/bugshot.min.js"></script>
   <script>
-    ErrorWatch.init({
+    BugShot.init({
       apiKey: 'ew_your_api_key_here',
       environment: 'production'
     });
@@ -164,13 +164,13 @@ Session replay is enabled by default and records:
 
 ```typescript
 // Clear replay data
-ErrorWatch.clearReplay();
+BugShot.clearReplay();
 ```
 
 ### Error Filtering
 
 ```typescript
-ErrorWatch.init({
+BugShot.init({
   beforeSend: (error) => {
     // Ignore errors from extensions
     if (error.file?.includes('chrome-extension://')) {
@@ -193,7 +193,7 @@ ErrorWatch.init({
 Reduce data volume by sampling errors:
 
 ```typescript
-ErrorWatch.init({
+BugShot.init({
   sampleRate: 0.5 // Only send 50% of errors
 });
 ```
@@ -224,12 +224,12 @@ ErrorWatch.init({
 ## 🛠️ API Reference
 
 ### `init(config)`
-Initialize ErrorWatch SDK.
+Initialize BugShot SDK.
 
 **Parameters:**
 - `config` (object): Configuration options
 
-**Returns:** `ErrorWatchClient`
+**Returns:** `BugShotClient`
 
 ### `captureError(error, additionalInfo?)`
 Manually capture an error.
@@ -266,7 +266,7 @@ Stop error capturing and clean up.
 Enable debug mode to see SDK logs:
 
 ```typescript
-ErrorWatch.init({
+BugShot.init({
   debug: true,
   apiKey: 'your-api-key'
 });
@@ -274,11 +274,11 @@ ErrorWatch.init({
 
 ## 📝 License
 
-MIT © ErrorWatch Team
+MIT © BugShot Team
 
 ## 🔗 Links
 
-- [Documentation](https://docs.errorwatch.com)
-- [Dashboard](https://app.errorwatch.com)
-- [GitHub](https://github.com/errorwatch/errorwatch)
-- [NPM](https://www.npmjs.com/package/@errorwatch/browser-sdk)
+- [Documentation](https://docs.bugshot.com)
+- [Dashboard](https://app.bugshot.com)
+- [GitHub](https://github.com/bugshot/bugshot)
+- [NPM](https://www.npmjs.com/package/@bugshot/browser-sdk)

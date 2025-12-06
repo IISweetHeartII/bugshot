@@ -183,7 +183,7 @@ export default function ProjectDetailPage() {
         </div>
 
         <p className="text-sm text-text-secondary mt-3">
-          이 API 키를 사용하여 ErrorWatch SDK를 초기화하세요.
+          이 API 키를 사용하여 BugShot SDK를 초기화하세요.
         </p>
       </div>
 
@@ -248,9 +248,9 @@ export default function ProjectDetailPage() {
           <div>
             <h3 className="text-sm font-semibold text-text-primary mb-2">JavaScript</h3>
             <pre className="bg-bg-tertiary p-4 rounded-lg border border-border overflow-x-auto">
-              <code className="text-sm text-text-primary">{`import ErrorWatch from '@errorwatch/browser-sdk';
+              <code className="text-sm text-text-primary">{`import BugShot from '@bugshot/browser-sdk';
 
-ErrorWatch.init({
+BugShot.init({
   apiKey: '${project.apiKey}',
   environment: '${project.environment}',
   release: '1.0.0'
@@ -261,7 +261,7 @@ ErrorWatch.init({
           <div>
             <h3 className="text-sm font-semibold text-text-primary mb-2">React</h3>
             <pre className="bg-bg-tertiary p-4 rounded-lg border border-border overflow-x-auto">
-              <code className="text-sm text-text-primary">{`import { ErrorBoundary } from '@errorwatch/react';
+              <code className="text-sm text-text-primary">{`import { ErrorBoundary } from '@bugshot/react';
 
 <ErrorBoundary apiKey="${project.apiKey}">
   <App />

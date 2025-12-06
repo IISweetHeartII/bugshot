@@ -1,20 +1,20 @@
 // SDK Import Test
-const ErrorWatch = require('./dist/index.cjs.js');
+const BugShot = require('./dist/index.cjs.js');
 
 console.log('✅ SDK imported successfully!');
-console.log('Available methods:', Object.keys(ErrorWatch));
+console.log('Available methods:', Object.keys(BugShot));
 
 // Test basic structure
-if (typeof ErrorWatch.init === 'function') {
+if (typeof BugShot.init === 'function') {
   console.log('✅ init() method exists');
 }
-if (typeof ErrorWatch.captureError === 'function') {
+if (typeof BugShot.captureError === 'function') {
   console.log('✅ captureError() method exists');
 }
-if (typeof ErrorWatch.captureMessage === 'function') {
+if (typeof BugShot.captureMessage === 'function') {
   console.log('✅ captureMessage() method exists');
 }
-if (typeof ErrorWatch.setUser === 'function') {
+if (typeof BugShot.setUser === 'function') {
   console.log('✅ setUser() method exists');
 }
 

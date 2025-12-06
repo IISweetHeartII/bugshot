@@ -4,9 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a monorepo for an **error monitoring service** with multilingual support (다국어 지원 에러 모니터링 서비스). The project consists of a Spring Boot backend and Next.js frontend designed to work together.
-
-**Architecture**: Monorepo with separate backend and frontend services that communicate via REST API.
+**Bugshot** is a real-time error monitoring and session replay service. It captures JavaScript errors from client applications via SDKs, records user sessions, and provides a dashboard with notifications through Discord, Slack, Email, and Kakao.
 
 ## Development Commands
 
@@ -14,217 +12,162 @@ This is a monorepo for an **error monitoring service** with multilingual support
 
 ```bash
 cd backend
-
-# Run the application
-./gradlew bootRun
-
-# Run tests (currently disabled)
-./gradlew test
-
-# Build the project (skip tests)
-./gradlew build -x test
-
-# Clean and rebuild
-./gradlew clean build -x test
+./gradlew bootRun              # Run application
+./gradlew build -x test        # Build (skip tests - currently disabled)
+./gradlew clean build -x test  # Clean rebuild
 ```
-
-**Environment variables for backend**:
-- `DB_URL` - Database connection URL (default: `jdbc:mysql://localhost:3306/bugshot`)
-- `DB_USER` - Database username (default: `root`)
-- `DB_PW` - Database password (default: `password`)
-- `SPRING_PROFILES_ACTIVE` - Active profile (default: `local`)
-- `REDIS_HOST` - Redis host (default: `localhost`)
-- `REDIS_PORT` - Redis port (default: `6379`)
-- `MAIL_HOST` - SMTP host (default: `smtp.gmail.com`)
-- `MAIL_USERNAME` - Email username
-- `MAIL_PASSWORD` - Email password
-- `FRONTEND_BASE_URL` - Frontend URL (default: `http://localhost:3000`)
 
 ### Frontend (Next.js)
 
 ```bash
 cd frontend
+pnpm install     # Install dependencies
+pnpm run dev     # Development server (Turbopack)
+pnpm run build   # Production build
+pnpm run lint    # Lint code
+```
 
-# Install dependencies
-pnpm install
+### SDK Packages
 
-# Run development server (with Turbopack)
-pnpm run dev
+```bash
+# Browser SDK
+cd packages/sdk
+npm install && npm run build   # Build SDK
+npm run dev                    # Watch mode
 
-# Build for production
-pnpm run build
-
-# Start production server
-pnpm start
-
-# Lint code
-pnpm run lint
+# React SDK
+cd packages/react
+npm install && npm run build
 ```
 
 ### Docker Environment
 
 ```bash
-# Start MySQL only (recommended for local dev)
-docker-compose up mysql -d
-
-# Start all services (backend + MySQL)
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f
+docker-compose up mysql redis -d   # Start MySQL + Redis (recommended)
+docker-compose up -d               # Start all services
+docker-compose logs -f             # View logs
 ```
+
+### Local Development Workflow
+
+1. Start dependencies: `docker-compose up mysql redis -d`
+2. Start backend: `cd backend && ./gradlew bootRun`
+3. Start frontend: `cd frontend && pnpm run dev`
+4. Access: Frontend http://localhost:3000, Backend http://localhost:8081, Swagger http://localhost:8081/swagger-ui.html
 
 ## Architecture
 
 ### Monorepo Structure
 
-- **`backend/`** - Spring Boot 3.5.6 application (Java 21)
-  - Uses Gradle for build management
-  - MySQL database with JPA/Hibernate
-  - Redis for caching (performance optimization)
-  - Actuator endpoints at `/actuator` (health, info, metrics)
+```
+bugshot/
+├── backend/          # Spring Boot 3.5 (Java 21) - Port 8081
+├── frontend/         # Next.js 15 (TypeScript/React 19) - Port 3000
+├── packages/
+│   ├── sdk/          # @bugshot/browser-sdk (vanilla JS)
+│   ├── react/        # @bugshot/react (React wrapper)
+│   └── java-sdk/     # Java SDK (JitPack)
+└── docs/             # Deployment guides
+```
 
-- **`frontend/`** - Next.js 15 application (TypeScript)
-  - Uses App Router (not Pages Router)
-  - Turbopack for fast development
-  - Tailwind CSS for styling
-  - React 19 RC
+### Backend Domain Structure
 
-### Backend Architecture
+**Location**: `backend/src/main/java/com/bugshot/`
 
-**Location**: `backend/src/main/java/com/error/monitor/`
+```
+domain/
+├── auth/           # User entity with OAuth (GitHub, Google), plan types (FREE/PRO/TEAM)
+├── project/        # Projects with API keys, environment settings, session replay config
+├── error/          # Error deduplication, priority scoring, occurrences tracking
+├── notification/   # Discord (JDA), Slack, Email (Spring Mail), Kakao integrations
+├── replay/         # Session replay storage (Cloudflare R2 with local fallback)
+├── dashboard/      # Statistics with Redis caching (10-min TTL)
+├── webhook/        # Custom webhook endpoints
+└── common/         # BaseEntity with audit fields
+global/
+├── config/         # SecurityConfig, RedisConfig
+└── security/       # UserIdAuthenticationFilter (X-User-Id header auth)
+```
 
-The backend follows a domain-driven structure (as planned):
-- `domain/` - Domain models and business logic (project, error, notification)
-- `global/` - Cross-cutting concerns (config, exception handling, response formatting)
-- `service/` - Business logic and service layer
-- `api/` - REST API controllers
+**Key Algorithms**:
+- **Error Deduplication**: SHA-256 hash of (errorType + filePath + lineNumber)
+- **Priority Scoring**: Factors in page importance (checkout 10x, login 8x, homepage 5x), frequency, affected users
+- **Rate Limiting**: Bucket4j - 100 req/min per API key, 20 req/min per IP
 
-**Configuration**:
-- `application.yml` - Main configuration with environment variable defaults
-- `application-local.yml` - Local development overrides
-- JPA DDL mode: `update` (automatically creates/updates schema)
-- SQL logging: Enabled in local profile
+### Frontend Architecture (BFF Pattern)
 
-### Frontend Architecture
+**Location**: `frontend/src/`
 
-**Location**: `frontend/app/`
+The frontend uses Backend-For-Frontend pattern - all API requests flow through Next.js API routes.
 
-Uses Next.js App Router:
-- `layout.tsx` - Root layout component
-- `page.tsx` - Homepage component
-- `api/` - API routes (if needed for BFF pattern)
-- `components/` - Reusable React components
-- `lib/` - Utility functions and shared code
+```
+src/
+├── app/
+│   ├── (dashboard)/        # Protected route group (requires auth)
+│   │   ├── dashboard/      # Stats and trends
+│   │   ├── projects/       # Project CRUD + [id] detail
+│   │   ├── errors/         # Error list + [id] detail + [id]/replay
+│   │   └── settings/       # User settings + webhooks
+│   ├── api/                # BFF proxy routes to backend
+│   └── login/              # OAuth login page
+├── lib/
+│   ├── api.ts              # Client-side axios (calls /api/* routes)
+│   └── server-api.ts       # Server-side fetch (direct backend calls with X-User-Id)
+└── auth.ts                 # NextAuth config (GitHub/Google OAuth)
+```
 
-### Service Communication
+**Request Flow**: Browser → Next.js API Route (`/api/*`) → Spring Boot Backend (`:8081`)
 
-- **Frontend → Backend**: REST API calls to `http://localhost:8081`
-- **Backend Port**: 8081
-- **Frontend Port**: 3000
-- **MySQL Port**: 3306
-- **Redis Port**: 6379
+**Authentication**: NextAuth handles OAuth → Backend syncs user → `X-User-Id` header on all requests
 
-## Key Technical Details
+### SDK Architecture
 
-### Backend Stack
-- Java 21 with Spring Boot 3.5.6
-- Spring Data JPA with Hibernate
-- MySQL 8.0 database
-- Redis for caching (Spring Data Redis + Lettuce)
-- Spring Mail for email notifications
-- Bucket4j for rate limiting (100 req/min per API key, 20 req/min per IP)
-- Lombok for boilerplate reduction
-- Spring Actuator for monitoring
-- Validation with Bean Validation
-- Cloudflare R2 (S3-compatible) for session replay storage
+**Browser SDK** (`packages/sdk/src/`):
+- `client.ts` - Main BugShot class, initialization
+- `error-capture.ts` - Global error handlers (window.onerror, unhandledrejection)
+- `session-replay.ts` - DOM mutation tracking, event recording
+- `transport.ts` - HTTP submission with retry and Beacon API fallback
 
-### Frontend Stack
-- Next.js 15 with App Router
-- TypeScript 5
-- React 19 RC
-- Tailwind CSS 3.4
-- ESLint with Next.js config
+**React SDK** (`packages/react/src/`):
+- `BugShotProvider.tsx` - Context provider for SDK initialization
+- `ErrorBoundary.tsx` - React Error Boundary integration
+- `hooks.ts` - `useBugShot()`, `useCaptureError()` hooks
 
-### Database Configuration
+## Key Configuration
 
-MySQL connection details (Docker default):
-- Database: `bugshot`
-- Root password: `root`
-- App user: `error_user`
-- App password: `error_password`
+### Environment Variables
 
-## Development Workflow
+**Backend** (see `.env.example`):
+- `DB_URL`, `DB_USER`, `DB_PW` - MySQL connection
+- `REDIS_HOST`, `REDIS_PORT` - Redis connection
+- `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD` - SMTP
+- `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `R2_BUCKET` - Cloudflare R2
 
-1. **Start Database**: Run `docker-compose up mysql -d`
-2. **Start Redis** (optional): Run `docker-compose up redis -d` or install locally
-3. **Start Backend**: Run `./gradlew bootRun` from `backend/`
-4. **Start Frontend**: Run `pnpm run dev` from `frontend/`
-5. **Access**:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8081
-   - Health check: http://localhost:8081/actuator/health
+**Frontend** (`.env.local`):
+- `BACKEND_URL` - Backend URL (default: `http://localhost:8081`)
+- `NEXTAUTH_SECRET`, `NEXTAUTH_URL` - NextAuth
+- `GITHUB_CLIENT_ID/SECRET`, `GOOGLE_CLIENT_ID/SECRET` - OAuth
 
-## Environment Setup
+### Ports
 
-### Backend Requirements
-- Java 21 (configured via Gradle toolchain)
-- MySQL 8.0 (via Docker or local installation)
-- Redis (optional for development, required for production)
-- Gradle (wrapper included: `gradlew`)
-
-### Frontend Requirements
-- Node.js 18+
-- pnpm (for package management)
+| Service | Port |
+|---------|------|
+| Frontend | 3000 |
+| Backend | 8081 |
+| MySQL | 3306 (Docker: 3307) |
+| Redis | 6379 (Docker: 6380) |
 
 ## Testing
 
-### Backend Tests
+**Backend**: Tests currently disabled (MySQL dependency). Planned: H2 in-memory DB for integration tests.
 
-**Current Status**: Test files have been removed temporarily.
+**Frontend**: No test framework configured yet.
 
-**Reason**: Tests were failing due to MySQL connection dependencies during build process.
+**SDK**: Manual testing via `packages/examples/vanilla-js.html`
 
-**Planned Implementation**:
-- Will use **H2 in-memory database** for integration tests
-- Tests will not depend on external MySQL/Redis instances
-- Faster test execution with embedded database
-- Proper test isolation and cleanup between tests
+## Deployment
 
-**TODO**: Implement comprehensive test suite with:
-- **Unit tests** for services and repositories
-- **Integration tests** with H2 in-memory DB (@DataJpaTest, @SpringBootTest)
-- **Controller tests** with MockMvc (@WebMvcTest)
-- **Test fixtures** and data builders for consistent test data
-- **Mockito** for mocking external dependencies (Discord, Slack, Email)
-- **TestContainers** (optional) for more realistic integration tests
-
-**Build without tests** (current approach):
-```bash
-cd backend
-./gradlew build -x test
-```
-
-### Frontend Tests
-Currently no test framework configured. Add as needed (Jest, Vitest, etc.).
-
-## Recent Improvements
-
-### Performance Optimization
-- Redis caching for dashboard stats (10x faster)
-- Redis caching for project queries (90% DB load reduction)
-- Rate limiting to prevent API abuse
-
-### Features Added
-- Email notification system with HTML templates
-- Configurable frontend URL for notifications
-- Session replay URLs in error notifications
-- Automated session replay cleanup (daily at 2 AM)
-- Enhanced Discord bot with actual replay data
-
-### Security
-- Dual-layer rate limiting (API key + IP)
-- Proxy-aware IP extraction for accurate rate limiting
+- **Frontend**: Vercel (automatic from main branch)
+- **Backend**: Mac Mini via Docker + Cloudflare Tunnel
+- **Storage**: Cloudflare R2 for session replays
+- See `docs/DEPLOYMENT.md` for full guide
