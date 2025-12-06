@@ -2,16 +2,31 @@ import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 
+// 환경 변수 검증
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const BACKEND_URL = process.env.BACKEND_URL;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID || "",
-      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
-    }),
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
+    ...(GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET
+      ? [
+          GitHub({
+            clientId: GITHUB_CLIENT_ID,
+            clientSecret: GITHUB_CLIENT_SECRET,
+          }),
+        ]
+      : []),
+    ...(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: GOOGLE_CLIENT_ID,
+            clientSecret: GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: "/login",
@@ -19,10 +34,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      // Send user info to backend for registration/login
-      // Note: This runs server-side, so we use BACKEND_URL (not NEXT_PUBLIC_*)
+      if (!BACKEND_URL) {
+        console.warn("BACKEND_URL not configured");
+        return true;
+      }
+
       try {
-        const response = await fetch(`${process.env.BACKEND_URL}/api/auth/oauth`, {
+        const response = await fetch(`${BACKEND_URL}/api/auth/oauth`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -41,11 +59,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return false;
         }
 
-        // Get backend user ID from response and store it
         const data = await response.json();
         if (data.success && data.data?.user?.id) {
-          // Store backend user ID for jwt callback
-          (user as any).backendId = data.data.user.id;
+          user.backendId = data.data.user.id;
         }
 
         return true;
@@ -55,21 +71,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
     },
     async jwt({ token, user, account }) {
-      // Persist the backend user ID and provider to the token
       if (account && user) {
-        (token as any).provider = account.provider;
-        (token as any).backendId = (user as any).backendId || user.id;
+        token.provider = account.provider;
+        token.backendId = user.backendId || user.id;
       }
       return token;
     },
     async session({ session, token }) {
-      // Send properties to the client
       return {
         ...session,
         user: {
           ...session.user,
-          id: (token as any).backendId || "",
-          provider: (token as any).provider || "",
+          id: token.backendId || "",
+          provider: token.provider || "",
         },
       };
     },

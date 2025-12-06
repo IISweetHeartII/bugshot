@@ -41,7 +41,8 @@ export default {
         info: "#5865F2",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        pretendard: ["Pretendard Variable", "Pretendard", "system-ui", "sans-serif"],
+        sans: ["Pretendard Variable", "Pretendard", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
     },

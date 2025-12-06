@@ -1,14 +1,13 @@
 import { proxyToBackend } from "@/lib/server-api";
 import { NextRequest } from "next/server";
+import { IdRouteContext } from "@/types/api";
 
-type RouteContext = { params: Promise<{ id: string }> };
-
-export async function PUT(request: NextRequest, context: RouteContext) {
+export async function PUT(request: NextRequest, context: IdRouteContext) {
   const { id } = await context.params;
   return proxyToBackend(request, `/api/webhooks/${id}`);
 }
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export async function DELETE(request: NextRequest, context: IdRouteContext) {
   const { id } = await context.params;
   return proxyToBackend(request, `/api/webhooks/${id}`);
 }
