@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import type {
   ApiResponse,
   PageResponse,
@@ -11,6 +11,7 @@ import type {
   ProjectRequest,
   WebhookConfigRequest,
   IngestRequest,
+  ValidationError,
 } from '@/types/api';
 
 /**
@@ -59,7 +60,7 @@ class ApiClient {
     if (response.data.success) {
       return response.data.data as T;
     } else {
-      throw new Error(response.data.message || 'API request failed');
+      throw new Error(response.data.message || response.data.code || 'API request failed');
     }
   }
 
@@ -242,15 +243,3 @@ class ApiClient {
 }
 
 export const api = new ApiClient();
-
-/**
- * Initialize API client
- *
- * Note: BFF 패턴에서는 인증이 서버 사이드에서 자동으로 처리되므로,
- * 이 함수는 하위 호환성을 위해 유지되지만 더 이상 아무 작업도 하지 않습니다.
- *
- * @deprecated BFF 패턴에서는 더 이상 필요하지 않습니다
- */
-export function initializeApi(_userId: string | null) {
-  // No-op: Authentication is now handled server-side via BFF pattern
-}

@@ -1,15 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { AlertCircle, TrendingUp, Users, Clock, Activity } from "lucide-react";
-import { formatNumber, formatRelativeTime, getSeverityEmoji } from "@/lib/utils";
+import { AlertCircle, TrendingUp, Users, Clock } from "lucide-react";
+import { formatNumber, formatRelativeTime, getSeverityEmoji, getSeverityBadgeVariant } from "@/lib/utils";
+import { PAGINATION, MESSAGES } from "@/lib/constants";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { AnimatedStatCard } from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import type { DashboardStatsResponse, ErrorResponse } from "@/types/api";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [recentErrors, setRecentErrors] = useState<ErrorResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,17 +29,15 @@ export default function DashboardPage() {
     try {
       setLoading(true);
 
-      // TODO: 실제 프로젝트 ID 사용 (현재는 임시로 첫 번째 프로젝트 사용)
       const projects = await api.getProjects();
       const projectId = projects[0]?.id || "default";
 
-      // 실제 대시보드 통계 API 호출
       const [statsData, errorsData] = await Promise.all([
         api.getDashboardStats(projectId, period),
         api.getErrors({
           projectId,
-          page: 0,
-          size: 10,
+          page: PAGINATION.DEFAULT_PAGE,
+          size: PAGINATION.DASHBOARD_ERRORS_SIZE,
           sort: "priority",
           status: "UNRESOLVED"
         }),
@@ -44,18 +47,18 @@ export default function DashboardPage() {
       setRecentErrors(errorsData.data);
     } catch (error) {
       console.error("Failed to load dashboard:", error);
-      toast.error("대시보드 데이터를 불러오는데 실패했습니다.");
+      toast.error(MESSAGES.ERROR.LOAD_DASHBOARD);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleErrorClick = (errorId: string) => {
+    router.push(`/errors/${errorId}`);
+  };
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-text-secondary">데이터를 불러오는 중...</div>
-      </div>
-    );
+    return <LoadingSpinner message={MESSAGES.LOADING.DASHBOARD} />;
   }
 
   return (
@@ -78,29 +81,29 @@ export default function DashboardPage() {
           }
         }}
       >
-        <StatCard
+        <AnimatedStatCard
           title="총 에러 수"
           value={formatNumber(stats?.totalErrors || 0)}
           icon={AlertCircle}
           iconColor="text-error"
         />
-        <StatCard
+        <AnimatedStatCard
           title="영향받은 사용자"
           value={formatNumber(stats?.affectedUsers || 0)}
           icon={Users}
           iconColor="text-warning"
         />
-        <StatCard
-          title="마지막 에러"
-          value={stats?.lastErrorTime ? formatRelativeTime(stats.lastErrorTime) : "N/A"}
+        <AnimatedStatCard
+          title="오늘 에러"
+          value={formatNumber(stats?.todayErrors || 0)}
           icon={Clock}
           iconColor="text-info"
         />
-        <StatCard
+        <AnimatedStatCard
           title="에러 추세"
-          value={`${stats?.trend || 0}%`}
+          value={`${stats?.changeRate || 0}%`}
           icon={TrendingUp}
-          iconColor={stats && stats.trend < 0 ? "text-success" : "text-error"}
+          iconColor={stats && stats.changeRate < 0 ? "text-success" : "text-error"}
           subtitle="어제 대비"
         />
       </motion.div>
@@ -137,43 +140,36 @@ export default function DashboardPage() {
               <motion.div
                 key={error.id}
                 className="flex items-center gap-4 p-4 bg-bg-primary rounded-lg hover:bg-bg-tertiary transition-colors cursor-pointer"
-                onClick={() => (window.location.href = `/errors/${error.id}`)}
+                onClick={() => handleErrorClick(error.id)}
                 variants={{
                   hidden: { opacity: 0, x: -20 },
                   visible: { opacity: 1, x: 0 }
                 }}
-                whileHover={{ scale: 1.02, x: 5 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.01, x: 5 }}
+                whileTap={{ scale: 0.99 }}
+                role="button"
+                tabIndex={0}
+                aria-label={`${error.errorType} 에러 상세 보기`}
+                onKeyDown={(e) => e.key === "Enter" && handleErrorClick(error.id)}
               >
-                <motion.div
-                  className="text-2xl"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", delay: 0.2 }}
-                >
+                <div className="text-2xl" aria-hidden="true">
                   {getSeverityEmoji(error.severity)}
-                </motion.div>
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-text-primary truncate">
                       {error.errorType}
                     </span>
-                    <Badge
-                      variant={
-                        error.severity === "CRITICAL" ? "critical" :
-                        error.severity === "HIGH" ? "high" :
-                        error.severity === "MEDIUM" ? "medium" : "low"
-                      }
-                    >
+                    <Badge variant={getSeverityBadgeVariant(error.severity)}>
                       {error.severity}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-text-muted">
                     <span>{error.occurrenceCount}회 발생</span>
-                    <span>•</span>
+                    <span aria-hidden="true">•</span>
                     <span>{error.affectedUsersCount}명 영향</span>
-                    <span>•</span>
-                    <span>{formatRelativeTime(error.lastOccurredAt)}</span>
+                    <span aria-hidden="true">•</span>
+                    <span>{formatRelativeTime(error.lastSeenAt)}</span>
                   </div>
                 </div>
               </motion.div>
@@ -181,51 +177,6 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </motion.div>
-    </motion.div>
-  );
-}
-
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  iconColor,
-  subtitle,
-}: {
-  title: string;
-  value: string;
-  icon: React.ElementType;
-  iconColor: string;
-  subtitle?: string;
-}) {
-  return (
-    <motion.div
-      className="bg-bg-secondary rounded-xl p-6 border border-bg-primary"
-      variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 }
-      }}
-      whileHover={{ y: -5, borderColor: "#5865F2" }}
-      transition={{ type: "spring", stiffness: 300 }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-text-secondary text-sm font-medium">{title}</h3>
-        <motion.div
-          whileHover={{ rotate: 360 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Icon className={`w-5 h-5 ${iconColor}`} />
-        </motion.div>
-      </div>
-      <motion.div
-        className="text-3xl font-bold text-text-primary mb-1"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", delay: 0.2 }}
-      >
-        {value}
-      </motion.div>
-      {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
     </motion.div>
   );
 }

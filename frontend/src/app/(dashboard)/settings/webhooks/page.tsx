@@ -3,14 +3,21 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Plus, Trash2, TestTube, Edit, Check, X } from "lucide-react";
+import { getErrorMessage } from "@/lib/utils";
+import { MESSAGES, WEBHOOK_TYPES } from "@/lib/constants";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Select } from "@/components/ui/select";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import type { WebhookConfigResponse, WebhookConfigRequest } from "@/types/api";
+
+type WebhookType = WebhookConfigRequest['type'];
 
 export default function WebhooksPage() {
   const [webhooks, setWebhooks] = useState<WebhookConfigResponse[]>([]);
@@ -18,6 +25,7 @@ export default function WebhooksPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingWebhook, setEditingWebhook] = useState<WebhookConfigResponse | null>(null);
   const [selectedProject, setSelectedProject] = useState<string>("");
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   useEffect(() => {
     loadProjects();
@@ -42,7 +50,7 @@ export default function WebhooksPage() {
       setWebhooks(data);
     } catch (error) {
       console.error("Failed to load webhooks:", error);
-      toast.error("웹훅 목록을 불러오는데 실패했습니다.");
+      toast.error(MESSAGES.ERROR.LOAD_WEBHOOKS);
     } finally {
       setLoading(false);
     }
@@ -52,33 +60,34 @@ export default function WebhooksPage() {
     try {
       const result = await api.testWebhook(webhookId);
       toast.success(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to test webhook:", error);
-      toast.error(error.message || "웹훅 테스트에 실패했습니다.");
+      toast.error(getErrorMessage(error));
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`"${name}" 웹훅을 삭제하시겠습니까?`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "웹훅 삭제",
+      description: `"${name}" 웹훅을 삭제하시겠습니까?`,
+      confirmText: "삭제",
+      confirmVariant: "destructive",
+    });
+
+    if (!confirmed) return;
 
     try {
       await api.deleteWebhook(id);
       await loadWebhooks(selectedProject);
-      toast.success("웹훅이 삭제되었습니다.");
+      toast.success(MESSAGES.SUCCESS.WEBHOOK_DELETED);
     } catch (error) {
       console.error("Failed to delete webhook:", error);
-      toast.error("웹훅 삭제에 실패했습니다.");
+      toast.error(MESSAGES.ERROR.DELETE_WEBHOOK);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-text-secondary">웹훅을 불러오는 중...</div>
-      </div>
-    );
+    return <LoadingSpinner message="웹훅을 불러오는 중..." />;
   }
 
   return (
@@ -96,17 +105,17 @@ export default function WebhooksPage() {
           </p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
           웹훅 추가
         </Button>
       </div>
 
       {/* Webhooks List */}
       {webhooks.length === 0 ? (
-        <div className="text-center py-12 bg-bg-secondary rounded-lg border border-border">
+        <div className="text-center py-12 bg-bg-secondary rounded-lg border border-bg-primary">
           <p className="text-text-secondary mb-4">설정된 웹훅이 없습니다.</p>
           <Button variant="outline" onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
             첫 웹훅 추가하기
           </Button>
         </div>
@@ -139,6 +148,9 @@ export default function WebhooksPage() {
         webhook={editingWebhook}
         projectId={selectedProject}
       />
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </motion.div>
   );
 }
@@ -156,7 +168,7 @@ function WebhookCard({
 }) {
   return (
     <motion.div
-      className="bg-bg-secondary rounded-lg p-6 border border-border"
+      className="bg-bg-secondary rounded-lg p-6 border border-bg-primary"
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
     >
@@ -169,12 +181,12 @@ function WebhookCard({
             </Badge>
             {webhook.enabled ? (
               <Badge variant="default">
-                <Check className="w-3 h-3 mr-1" />
+                <Check className="w-3 h-3 mr-1" aria-hidden="true" />
                 활성
               </Badge>
             ) : (
               <Badge variant="secondary">
-                <X className="w-3 h-3 mr-1" />
+                <X className="w-3 h-3 mr-1" aria-hidden="true" />
                 비활성
               </Badge>
             )}
@@ -197,15 +209,15 @@ function WebhookCard({
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onTest}>
-            <TestTube className="w-4 h-4 mr-1" />
+            <TestTube className="w-4 h-4 mr-1" aria-hidden="true" />
             테스트
           </Button>
           <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit className="w-4 h-4 mr-1" />
+            <Edit className="w-4 h-4 mr-1" aria-hidden="true" />
             수정
           </Button>
           <Button variant="destructive" size="sm" onClick={onDelete}>
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -238,7 +250,7 @@ function WebhookDialog({
     if (webhook) {
       setFormData({
         projectId: webhook.projectId,
-        type: webhook.type as any,
+        type: webhook.type,
         webhookUrl: webhook.webhookUrl,
         name: webhook.name,
         enabled: webhook.enabled,
@@ -260,15 +272,15 @@ function WebhookDialog({
     try {
       if (webhook) {
         await api.updateWebhook(webhook.id, formData);
-        toast.success("웹훅이 수정되었습니다.");
+        toast.success(MESSAGES.SUCCESS.WEBHOOK_UPDATED);
       } else {
         await api.createWebhook(formData);
-        toast.success("웹훅이 추가되었습니다.");
+        toast.success(MESSAGES.SUCCESS.WEBHOOK_CREATED);
       }
       onSuccess();
     } catch (error) {
       console.error("Failed to save webhook:", error);
-      toast.error("웹훅 저장에 실패했습니다.");
+      toast.error(webhook ? MESSAGES.ERROR.UPDATE_WEBHOOK : MESSAGES.ERROR.CREATE_WEBHOOK);
     }
   };
 
@@ -293,19 +305,13 @@ function WebhookDialog({
 
           <div>
             <Label htmlFor="type">웹훅 타입</Label>
-            <select
+            <Select
               id="type"
               value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-              className="w-full px-3 py-2 bg-bg-tertiary border border-border rounded-lg text-text-primary"
-              required
-            >
-              <option value="DISCORD">Discord</option>
-              <option value="SLACK">Slack</option>
-              <option value="TELEGRAM">Telegram</option>
-              <option value="KAKAO_WORK">Kakao Work</option>
-              <option value="CUSTOM">Custom</option>
-            </select>
+              onChange={(value) => setFormData({ ...formData, type: value as WebhookType })}
+              options={WEBHOOK_TYPES}
+              aria-label="웹훅 타입 선택"
+            />
           </div>
 
           <div>

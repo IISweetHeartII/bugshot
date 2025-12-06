@@ -1,21 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Plus, Trash2, RefreshCw, Copy, Check } from "lucide-react";
-import { formatRelativeTime, copyToClipboard } from "@/lib/utils";
+import { formatRelativeTime } from "@/lib/utils";
+import { MESSAGES } from "@/lib/constants";
+import { useCopyToClipboard } from "@/hooks";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreateProjectDialog } from "@/components/project-create-dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import type { ProjectResponse } from "@/types/api";
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const { copiedValue, copy } = useCopyToClipboard();
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   useEffect(() => {
     loadProjects();
@@ -28,61 +35,61 @@ export default function ProjectsPage() {
       setProjects(data);
     } catch (error) {
       console.error("Failed to load projects:", error);
-      toast.error("프로젝트를 불러오는데 실패했습니다.");
+      toast.error(MESSAGES.ERROR.LOAD_PROJECTS);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopyApiKey = async (apiKey: string) => {
-    const success = await copyToClipboard(apiKey);
-    if (success) {
-      setCopiedKey(apiKey);
-      setTimeout(() => setCopiedKey(null), 2000);
-      toast.success("API 키가 복사되었습니다!");
-    }
-  };
-
   const handleRegenerateKey = async (id: string) => {
-    if (!confirm("API 키를 재생성하시겠습니까? 기존 키는 사용할 수 없게 됩니다.")) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "API 키 재생성",
+      description: "API 키를 재생성하시겠습니까? 기존 키는 사용할 수 없게 됩니다.",
+      confirmText: "재생성",
+      confirmVariant: "destructive",
+    });
+
+    if (!confirmed) return;
 
     try {
       const result = await api.regenerateApiKey(id);
       await loadProjects();
-      toast.success("API 키가 재생성되었습니다!");
-      // 새 키 자동 복사
+      toast.success(MESSAGES.SUCCESS.API_KEY_REGENERATED);
       if (result.apiKey) {
-        await handleCopyApiKey(result.apiKey);
+        await copy(result.apiKey);
       }
     } catch (error) {
       console.error("Failed to regenerate API key:", error);
-      toast.error("API 키 재생성에 실패했습니다.");
+      toast.error(MESSAGES.ERROR.REGENERATE_API_KEY);
     }
   };
 
   const handleDeleteProject = async (id: string, name: string) => {
-    if (!confirm(`"${name}" 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "프로젝트 삭제",
+      description: `"${name}" 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
+      confirmText: "삭제",
+      confirmVariant: "destructive",
+    });
+
+    if (!confirmed) return;
 
     try {
       await api.deleteProject(id);
       await loadProjects();
-      toast.success("프로젝트가 삭제되었습니다.");
+      toast.success(MESSAGES.SUCCESS.PROJECT_DELETED);
     } catch (error) {
       console.error("Failed to delete project:", error);
-      toast.error("프로젝트 삭제에 실패했습니다.");
+      toast.error(MESSAGES.ERROR.DELETE_PROJECT);
     }
   };
 
+  const handleProjectClick = (projectId: string) => {
+    router.push(`/projects/${projectId}`);
+  };
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-text-secondary">프로젝트를 불러오는 중...</div>
-      </div>
-    );
+    return <LoadingSpinner message={MESSAGES.LOADING.PROJECTS} />;
   }
 
   return (
@@ -107,7 +114,7 @@ export default function ProjectsPage() {
           animate={{ opacity: 1, x: 0 }}
         >
           <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-5 h-5" />
+            <Plus className="w-5 h-5" aria-hidden="true" />
             새 프로젝트
           </Button>
         </motion.div>
@@ -120,14 +127,9 @@ export default function ProjectsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <motion.div
-            className="text-6xl mb-4"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", delay: 0.2 }}
-          >
+          <div className="text-6xl mb-4" role="img" aria-label="패키지">
             📦
-          </motion.div>
+          </div>
           <h3 className="text-xl font-semibold text-text-primary mb-2">
             프로젝트가 없습니다
           </h3>
@@ -135,7 +137,7 @@ export default function ProjectsPage() {
             첫 번째 프로젝트를 생성하고 에러 모니터링을 시작하세요.
           </p>
           <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-5 h-5" />
+            <Plus className="w-5 h-5" aria-hidden="true" />
             프로젝트 생성
           </Button>
         </motion.div>
@@ -155,12 +157,12 @@ export default function ProjectsPage() {
           {projects.map((project) => (
             <motion.div
               key={project.id}
-              className="bg-bg-secondary rounded-xl p-6 border border-bg-primary"
+              className="bg-bg-secondary rounded-xl p-6 border border-bg-primary hover:border-primary transition-colors"
               variants={{
                 hidden: { opacity: 0, y: 20 },
                 visible: { opacity: 1, y: 0 }
               }}
-              whileHover={{ y: -5, borderColor: "#5865F2" }}
+              whileHover={{ y: -5 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               {/* Project Header */}
@@ -174,24 +176,20 @@ export default function ProjectsPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <motion.button
+                  <button
                     onClick={() => handleRegenerateKey(project.id)}
                     className="p-2 hover:bg-bg-primary rounded-lg transition-colors"
-                    title="API 키 재생성"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
+                    aria-label="API 키 재생성"
                   >
-                    <RefreshCw className="w-4 h-4 text-text-muted" />
-                  </motion.button>
-                  <motion.button
+                    <RefreshCw className="w-4 h-4 text-text-muted" aria-hidden="true" />
+                  </button>
+                  <button
                     onClick={() => handleDeleteProject(project.id, project.name)}
                     className="p-2 hover:bg-bg-primary rounded-lg transition-colors"
-                    title="프로젝트 삭제"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
+                    aria-label="프로젝트 삭제"
                   >
-                    <Trash2 className="w-4 h-4 text-error" />
-                  </motion.button>
+                    <Trash2 className="w-4 h-4 text-error" aria-hidden="true" />
+                  </button>
                 </div>
               </div>
 
@@ -223,18 +221,17 @@ export default function ProjectsPage() {
                   <span className="text-xs font-medium text-text-muted">
                     API KEY
                   </span>
-                  <motion.button
-                    onClick={() => handleCopyApiKey(project.apiKey)}
+                  <button
+                    onClick={() => copy(project.apiKey)}
                     className="text-text-muted hover:text-text-primary transition-colors"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
+                    aria-label="API 키 복사"
                   >
-                    {copiedKey === project.apiKey ? (
-                      <Check className="w-4 h-4 text-success" />
+                    {copiedValue === project.apiKey ? (
+                      <Check className="w-4 h-4 text-success" aria-hidden="true" />
                     ) : (
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-4 h-4" aria-hidden="true" />
                     )}
-                  </motion.button>
+                  </button>
                 </div>
                 <code className="text-xs text-text-secondary font-mono break-all">
                   {project.apiKey}
@@ -243,7 +240,7 @@ export default function ProjectsPage() {
 
               {/* View Button */}
               <Button
-                onClick={() => (window.location.href = `/projects/${project.id}`)}
+                onClick={() => handleProjectClick(project.id)}
                 variant="secondary"
                 className="w-full mt-4"
               >
@@ -263,6 +260,9 @@ export default function ProjectsPage() {
           loadProjects();
         }}
       />
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </motion.div>
   );
 }

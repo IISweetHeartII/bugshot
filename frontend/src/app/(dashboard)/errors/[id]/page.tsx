@@ -11,17 +11,19 @@ import {
   Users,
   Clock,
   MapPin,
-  Play,
 } from "lucide-react";
 import {
   formatRelativeTime,
-  getSeverityColor,
   getSeverityEmoji,
+  getSeverityBadgeVariant,
   formatNumber,
 } from "@/lib/utils";
+import { MESSAGES } from "@/lib/constants";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { AnimatedStatCard } from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import type { ErrorResponse } from "@/types/api";
 
@@ -44,7 +46,7 @@ export default function ErrorDetailPage() {
       setError(data);
     } catch (err) {
       console.error("Failed to load error:", err);
-      toast.error("에러를 불러오는데 실패했습니다.");
+      toast.error(MESSAGES.ERROR.LOAD_ERROR);
       router.push("/errors");
     } finally {
       setLoading(false);
@@ -57,10 +59,10 @@ export default function ErrorDetailPage() {
     try {
       await api.resolveError(error.id);
       await loadError(error.id);
-      toast.success("에러가 해결됨으로 표시되었습니다.");
+      toast.success(MESSAGES.SUCCESS.ERROR_RESOLVED);
     } catch (err) {
       console.error("Failed to resolve error:", err);
-      toast.error("에러 처리에 실패했습니다.");
+      toast.error(MESSAGES.ERROR.RESOLVE_ERROR);
     }
   };
 
@@ -70,10 +72,10 @@ export default function ErrorDetailPage() {
     try {
       await api.ignoreError(error.id);
       await loadError(error.id);
-      toast.success("에러가 무시됨으로 표시되었습니다.");
+      toast.success(MESSAGES.SUCCESS.ERROR_IGNORED);
     } catch (err) {
       console.error("Failed to ignore error:", err);
-      toast.error("에러 처리에 실패했습니다.");
+      toast.error(MESSAGES.ERROR.IGNORE_ERROR);
     }
   };
 
@@ -83,19 +85,15 @@ export default function ErrorDetailPage() {
     try {
       await api.reopenError(error.id);
       await loadError(error.id);
-      toast.success("에러가 재오픈되었습니다.");
+      toast.success(MESSAGES.SUCCESS.ERROR_REOPENED);
     } catch (err) {
       console.error("Failed to reopen error:", err);
-      toast.error("에러 처리에 실패했습니다.");
+      toast.error(MESSAGES.ERROR.REOPEN_ERROR);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-text-secondary">에러 정보를 불러오는 중...</div>
-      </div>
-    );
+    return <LoadingSpinner message={MESSAGES.LOADING.ERRORS} />;
   }
 
   if (!error) {
@@ -122,7 +120,7 @@ export default function ErrorDetailPage() {
           variant="ghost"
           className="gap-2"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           목록으로 돌아가기
         </Button>
       </motion.div>
@@ -135,19 +133,13 @@ export default function ErrorDetailPage() {
         transition={{ delay: 0.1 }}
       >
         <div className="flex items-start gap-4">
-          <div className="text-4xl">{getSeverityEmoji(error.severity)}</div>
+          <div className="text-4xl" aria-hidden="true">{getSeverityEmoji(error.severity)}</div>
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <h1 className="text-2xl font-bold text-text-primary">
                 {error.errorType}
               </h1>
-              <Badge
-                variant={
-                  error.severity === "CRITICAL" ? "critical" :
-                  error.severity === "HIGH" ? "high" :
-                  error.severity === "MEDIUM" ? "medium" : "low"
-                }
-              >
+              <Badge variant={getSeverityBadgeVariant(error.severity)}>
                 {error.severity}
               </Badge>
               {error.status === "RESOLVED" && (
@@ -171,20 +163,20 @@ export default function ErrorDetailPage() {
                     onClick={handleResolve}
                     className="bg-success hover:bg-success/80 text-white"
                   >
-                    <CheckCircle className="w-5 h-5" />
+                    <CheckCircle className="w-5 h-5" aria-hidden="true" />
                     해결
                   </Button>
                   <Button
                     onClick={handleIgnore}
                     variant="outline"
                   >
-                    <XCircle className="w-5 h-5" />
+                    <XCircle className="w-5 h-5" aria-hidden="true" />
                     무시
                   </Button>
                 </>
               ) : (
                 <Button onClick={handleReopen}>
-                  <RotateCcw className="w-5 h-5" />
+                  <RotateCcw className="w-5 h-5" aria-hidden="true" />
                   재오픈
                 </Button>
               )}
@@ -219,25 +211,25 @@ export default function ErrorDetailPage() {
           }
         }}
       >
-        <StatCard
-          icon={Clock}
-          label="발생 횟수"
+        <AnimatedStatCard
+          title="발생 횟수"
           value={formatNumber(error.occurrenceCount) + "회"}
+          icon={Clock}
         />
-        <StatCard
-          icon={Users}
-          label="영향받은 사용자"
+        <AnimatedStatCard
+          title="영향받은 사용자"
           value={formatNumber(error.affectedUsersCount) + "명"}
+          icon={Users}
         />
-        <StatCard
-          icon={Clock}
-          label="처음 발생"
+        <AnimatedStatCard
+          title="처음 발생"
           value={formatRelativeTime(error.firstSeenAt)}
-        />
-        <StatCard
           icon={Clock}
-          label="마지막 발생"
+        />
+        <AnimatedStatCard
+          title="마지막 발생"
           value={formatRelativeTime(error.lastSeenAt)}
+          icon={Clock}
         />
       </motion.div>
 
@@ -250,7 +242,7 @@ export default function ErrorDetailPage() {
           transition={{ delay: 0.3 }}
         >
           <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
+            <MapPin className="w-5 h-5" aria-hidden="true" />
             위치
           </h3>
           <div className="space-y-2">
@@ -313,46 +305,6 @@ export default function ErrorDetailPage() {
           </p>
         </motion.div>
       )}
-    </motion.div>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-}) {
-  return (
-    <motion.div
-      className="bg-bg-secondary rounded-xl p-6 border border-bg-primary"
-      variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 }
-      }}
-      whileHover={{ y: -5, borderColor: "#5865F2" }}
-      transition={{ type: "spring", stiffness: 300 }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <motion.div
-          whileHover={{ rotate: 360 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Icon className="w-5 h-5 text-text-muted" />
-        </motion.div>
-      </div>
-      <motion.div
-        className="text-2xl font-bold text-text-primary mb-1"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", delay: 0.2 }}
-      >
-        {value}
-      </motion.div>
-      <div className="text-sm text-text-muted">{label}</div>
     </motion.div>
   );
 }

@@ -12,7 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { api } from "@/lib/api";
+import { MESSAGES, ENVIRONMENTS } from "@/lib/constants";
 import { toast } from "sonner";
 
 interface CreateProjectDialogProps {
@@ -37,19 +39,19 @@ export function CreateProjectDialog({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("프로젝트 이름을 입력해주세요.");
+      toast.error(MESSAGES.ERROR.VALIDATION_PROJECT_NAME);
       return;
     }
 
     try {
       setLoading(true);
       await api.createProject(formData);
-      toast.success("프로젝트가 생성되었습니다!");
+      toast.success(MESSAGES.SUCCESS.PROJECT_CREATED);
       onSuccess();
       setFormData({ name: "", description: "", environment: "DEVELOPMENT" });
     } catch (error) {
       console.error("Failed to create project:", error);
-      toast.error("프로젝트 생성에 실패했습니다.");
+      toast.error(MESSAGES.ERROR.CREATE_PROJECT);
     } finally {
       setLoading(false);
     }
@@ -94,18 +96,15 @@ export function CreateProjectDialog({
 
           <div className="space-y-2">
             <Label htmlFor="environment">환경</Label>
-            <select
+            <Select
               id="environment"
               value={formData.environment}
-              onChange={(e) =>
-                setFormData({ ...formData, environment: e.target.value })
+              onChange={(value) =>
+                setFormData({ ...formData, environment: value })
               }
-              className="flex h-10 w-full rounded-lg border border-bg-primary bg-bg-tertiary px-3 py-2 text-sm text-text-primary ring-offset-bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="DEVELOPMENT">Development</option>
-              <option value="STAGING">Staging</option>
-              <option value="PRODUCTION">Production</option>
-            </select>
+              options={ENVIRONMENTS}
+              aria-label="환경 선택"
+            />
           </div>
 
           <DialogFooter className="gap-2">

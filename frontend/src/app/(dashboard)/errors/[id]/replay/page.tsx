@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Play, Download, ArrowLeft, User, Clock, Globe } from "lucide-react";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime, formatFileSize } from "@/lib/utils";
+import { MESSAGES, API_CONFIG } from "@/lib/constants";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
 import type { SessionReplayResponse } from "@/types/api";
 
@@ -30,7 +32,7 @@ export default function SessionReplayPage() {
       setReplay(data);
     } catch (error) {
       console.error("Failed to load session replay:", error);
-      toast.error("세션 리플레이를 불러오는데 실패했습니다.");
+      toast.error(MESSAGES.ERROR.LOAD_REPLAY);
     } finally {
       setLoading(false);
     }
@@ -41,25 +43,21 @@ export default function SessionReplayPage() {
 
     try {
       setDownloading(true);
-      const downloadUrl = await api.getReplayDownloadUrl(errorId, 3600);
+      const downloadUrl = await api.getReplayDownloadUrl(errorId, API_CONFIG.REPLAY_DOWNLOAD_EXPIRATION_SECONDS);
 
       // 다운로드 링크 열기
       window.open(downloadUrl, "_blank");
-      toast.success("다운로드를 시작합니다.");
+      toast.success(MESSAGES.SUCCESS.DOWNLOAD_STARTED);
     } catch (error) {
       console.error("Failed to download replay:", error);
-      toast.error("다운로드에 실패했습니다.");
+      toast.error(MESSAGES.ERROR.DOWNLOAD_REPLAY);
     } finally {
       setDownloading(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-text-secondary">리플레이 데이터를 불러오는 중...</div>
-      </div>
-    );
+    return <LoadingSpinner message={MESSAGES.LOADING.REPLAY} />;
   }
 
   if (!replay) {
@@ -126,7 +124,7 @@ export default function SessionReplayPage() {
       </div>
 
       {/* User Info */}
-      <div className="bg-bg-secondary rounded-lg p-6 border border-border">
+      <div className="bg-bg-secondary rounded-lg p-6 border border-bg-primary">
         <h2 className="text-lg font-semibold text-text-primary mb-4">사용자 정보</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InfoRow label="사용자 ID" value={replay.userInfo.userId || "N/A"} />
@@ -142,7 +140,7 @@ export default function SessionReplayPage() {
       </div>
 
       {/* Replay Player Placeholder */}
-      <div className="bg-bg-secondary rounded-lg p-12 border border-border text-center">
+      <div className="bg-bg-secondary rounded-lg p-12 border border-bg-primary text-center">
         <Play className="w-16 h-16 mx-auto mb-4 text-text-secondary" />
         <h3 className="text-lg font-semibold text-text-primary mb-2">
           세션 리플레이 플레이어
@@ -163,12 +161,12 @@ function InfoCard({
   label,
   value,
 }: {
-  icon: any;
+  icon: React.ElementType;
   label: string;
   value: string;
 }) {
   return (
-    <div className="bg-bg-secondary rounded-lg p-4 border border-border">
+    <div className="bg-bg-secondary rounded-lg p-4 border border-bg-primary">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-primary/10 rounded-lg">
           <Icon className="w-5 h-5 text-primary" />
@@ -194,15 +192,9 @@ function InfoRow({
   return (
     <div className={span === 2 ? "col-span-2" : ""}>
       <dt className="text-sm text-text-secondary mb-1">{label}</dt>
-      <dd className="text-sm font-mono text-text-primary bg-bg-tertiary px-3 py-2 rounded border border-border break-all">
+      <dd className="text-sm font-mono text-text-primary bg-bg-tertiary px-3 py-2 rounded border border-bg-primary break-all">
         {value}
       </dd>
     </div>
   );
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

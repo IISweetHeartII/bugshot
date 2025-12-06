@@ -4,6 +4,8 @@ import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { LayoutDashboard, Folder, AlertCircle, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const navigation = [
   { name: "대시보드", href: "/dashboard", icon: LayoutDashboard },
@@ -24,7 +26,7 @@ export default function DashboardLayout({
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-bg-tertiary flex items-center justify-center">
-        <div className="text-text-secondary">로딩 중...</div>
+        <LoadingSpinner message="인증 확인 중..." />
       </div>
     );
   }
@@ -34,27 +36,35 @@ export default function DashboardLayout({
     return null;
   }
 
+  const handleLogout = () => {
+    router.push("/api/auth/signout");
+  };
+
   return (
     <div className="min-h-screen bg-bg-tertiary">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-bg-secondary border-r border-bg-primary">
+      <aside
+        className="fixed left-0 top-0 h-full w-64 bg-bg-secondary border-r border-bg-primary"
+        role="navigation"
+        aria-label="메인 네비게이션"
+      >
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-bg-primary">
-          <div className="flex items-center gap-3">
+          <Link href="/dashboard" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-xl">⚡</span>
+              <span className="text-xl" role="img" aria-label="BugShot 로고">⚡</span>
             </div>
             <div>
               <h1 className="text-lg font-bold text-text-primary">BugShot</h1>
               <p className="text-xs text-text-muted">Error Monitoring</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2" aria-label="주요 메뉴">
           {navigation.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.name}
@@ -67,8 +77,9 @@ export default function DashboardLayout({
                       : "text-text-secondary hover:bg-bg-primary hover:text-text-primary"
                   }
                 `}
+                aria-current={isActive ? "page" : undefined}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-5 h-5" aria-hidden="true" />
                 <span className="font-medium">{item.name}</span>
               </Link>
             );
@@ -79,10 +90,12 @@ export default function DashboardLayout({
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-bg-primary">
           <div className="flex items-center gap-3 px-2 py-2">
             {session?.user?.image && (
-              <img
+              <Image
                 src={session.user.image}
-                alt={session.user.name || "User"}
-                className="w-10 h-10 rounded-full"
+                alt={`${session.user.name || "User"} 프로필 이미지`}
+                width={40}
+                height={40}
+                className="rounded-full"
               />
             )}
             <div className="flex-1 min-w-0">
@@ -94,23 +107,23 @@ export default function DashboardLayout({
               </p>
             </div>
             <button
-              onClick={() => router.push("/api/auth/signout")}
+              onClick={handleLogout}
               className="p-2 hover:bg-bg-primary rounded-lg transition-colors"
-              title="로그아웃"
+              aria-label="로그아웃"
             >
-              <LogOut className="w-4 h-4 text-text-muted" />
+              <LogOut className="w-4 h-4 text-text-muted" aria-hidden="true" />
             </button>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="ml-64 min-h-screen">
+      <main className="ml-64 min-h-screen" role="main">
         {/* Top Bar */}
         <header className="h-16 bg-bg-secondary border-b border-bg-primary flex items-center justify-between px-8">
           <div>
             <h2 className="text-xl font-semibold text-text-primary">
-              {navigation.find((item) => item.href === pathname)?.name || "대시보드"}
+              {navigation.find((item) => pathname.startsWith(item.href))?.name || "대시보드"}
             </h2>
           </div>
         </header>

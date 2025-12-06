@@ -1,10 +1,54 @@
 "use client";
 
+import { useState } from "react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { User, CreditCard, Bell } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+
+interface NotificationSettings {
+  emailNotification: boolean;
+  discordNotification: boolean;
+  weeklyReport: boolean;
+}
 
 export default function SettingsPage() {
   const { data: session } = useSession();
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    emailNotification: true,
+    discordNotification: true,
+    weeklyReport: false,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleNotificationChange = async (
+    key: keyof NotificationSettings,
+    value: boolean
+  ) => {
+    // Optimistic update
+    setNotifications((prev) => ({ ...prev, [key]: value }));
+
+    try {
+      setSaving(true);
+      // TODO: API 연동 시 실제 저장 로직 추가
+      // await api.updateNotificationSettings({ [key]: value });
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      toast.success("알림 설정이 저장되었습니다.");
+    } catch (error) {
+      // Rollback on error
+      setNotifications((prev) => ({ ...prev, [key]: !value }));
+      toast.error("설정 저장에 실패했습니다.");
+      console.error("Failed to update notification settings:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -17,18 +61,20 @@ export default function SettingsPage() {
       </div>
 
       {/* Profile Section */}
-      <div className="bg-bg-secondary rounded-xl p-6 border border-bg-primary">
+      <Card>
         <div className="flex items-center gap-3 mb-6">
-          <User className="w-6 h-6 text-primary" />
+          <User className="w-6 h-6 text-primary" aria-hidden="true" />
           <h3 className="text-xl font-semibold text-text-primary">프로필</h3>
         </div>
 
         <div className="flex items-center gap-6">
           {session?.user?.image && (
-            <img
+            <Image
               src={session.user.image}
-              alt={session.user.name || "User"}
-              className="w-20 h-20 rounded-full"
+              alt={`${session.user.name || "User"} 프로필 이미지`}
+              width={80}
+              height={80}
+              className="rounded-full"
             />
           )}
           <div>
@@ -43,12 +89,12 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Plan Section */}
-      <div className="bg-bg-secondary rounded-xl p-6 border border-bg-primary">
+      <Card>
         <div className="flex items-center gap-3 mb-6">
-          <CreditCard className="w-6 h-6 text-primary" />
+          <CreditCard className="w-6 h-6 text-primary" aria-hidden="true" />
           <h3 className="text-xl font-semibold text-text-primary">플랜 & 사용량</h3>
         </div>
 
@@ -69,18 +115,19 @@ export default function SettingsPage() {
           </div>
 
           <div className="pt-4">
-            <button className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg transition-colors">
-              Pro 플랜으로 업그레이드
-            </button>
+            <Button disabled>Pro 플랜으로 업그레이드 (준비 중)</Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Notifications Section */}
-      <div className="bg-bg-secondary rounded-xl p-6 border border-bg-primary">
+      <Card>
         <div className="flex items-center gap-3 mb-6">
-          <Bell className="w-6 h-6 text-primary" />
+          <Bell className="w-6 h-6 text-primary" aria-hidden="true" />
           <h3 className="text-xl font-semibold text-text-primary">알림 설정</h3>
+          {saving && (
+            <span className="text-xs text-text-muted animate-pulse">저장 중...</span>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -91,10 +138,14 @@ export default function SettingsPage() {
                 중요한 에러 발생 시 이메일로 알림을 받습니다.
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-11 h-6 bg-bg-tertiary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
+            <Switch
+              checked={notifications.emailNotification}
+              onCheckedChange={(checked) =>
+                handleNotificationChange("emailNotification", checked)
+              }
+              disabled={saving}
+              aria-label="이메일 알림 설정"
+            />
           </div>
 
           <div className="flex items-center justify-between py-3 border-b border-bg-primary">
@@ -104,10 +155,14 @@ export default function SettingsPage() {
                 Discord 채널로 에러 알림을 받습니다.
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-11 h-6 bg-bg-tertiary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
+            <Switch
+              checked={notifications.discordNotification}
+              onCheckedChange={(checked) =>
+                handleNotificationChange("discordNotification", checked)
+              }
+              disabled={saving}
+              aria-label="Discord 알림 설정"
+            />
           </div>
 
           <div className="flex items-center justify-between py-3">
@@ -117,13 +172,17 @@ export default function SettingsPage() {
                 매주 월요일 에러 통계를 받습니다.
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 bg-bg-tertiary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
+            <Switch
+              checked={notifications.weeklyReport}
+              onCheckedChange={(checked) =>
+                handleNotificationChange("weeklyReport", checked)
+              }
+              disabled={saving}
+              aria-label="주간 리포트 설정"
+            />
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

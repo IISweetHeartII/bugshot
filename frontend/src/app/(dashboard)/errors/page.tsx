@@ -1,46 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { Filter, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import {
   formatRelativeTime,
-  getSeverityColor,
   getSeverityEmoji,
+  getSeverityBadgeVariant,
   formatNumber,
 } from "@/lib/utils";
+import { PAGINATION, MESSAGES, SEVERITY_FILTER_OPTIONS, STATUS_FILTER_OPTIONS } from "@/lib/constants";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FilterSelect } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { ErrorResponse } from "@/types/api";
 
+interface ErrorFilters {
+  severity: string;
+  status: string;
+  search: string;
+}
+
 export default function ErrorsPage() {
+  const router = useRouter();
   const [errors, setErrors] = useState<ErrorResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<ErrorFilters>({
     severity: "ALL",
     status: "UNRESOLVED",
     search: "",
   });
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState<number>(PAGINATION.DEFAULT_PAGE);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedProject, setSelectedProject] = useState<string>("all");
 
   useEffect(() => {
     loadErrors();
-  }, [filters, page, selectedProject]);
+  }, [filters.severity, filters.status, page, selectedProject]);
 
   const loadErrors = async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: {
+        page: number;
+        size: number;
+        sort: string;
+        projectId?: string;
+        severity?: string;
+        status?: string;
+      } = {
         page,
-        size: 20,
+        size: PAGINATION.DEFAULT_SIZE,
         sort: "priority",
       };
 
-      // TODO: 실제 프로젝트 ID 사용
       if (selectedProject !== "all") {
         params.projectId = selectedProject;
       }
@@ -58,19 +75,32 @@ export default function ErrorsPage() {
       setTotalPages(data.pagination.totalPages);
     } catch (error) {
       console.error("Failed to load errors:", error);
-      toast.error("에러 목록을 불러오는데 실패했습니다.");
+      toast.error(MESSAGES.ERROR.LOAD_ERRORS);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredErrors = filters.search
-    ? errors.filter(
-        (error) =>
-          error.type.toLowerCase().includes(filters.search.toLowerCase()) ||
-          error.message.toLowerCase().includes(filters.search.toLowerCase())
-      )
-    : errors;
+  const filteredErrors = useMemo(() => {
+    if (!filters.search) return errors;
+    const searchLower = filters.search.toLowerCase();
+    return errors.filter(
+      (error) =>
+        error.errorType.toLowerCase().includes(searchLower) ||
+        error.errorMessage.toLowerCase().includes(searchLower)
+    );
+  }, [errors, filters.search]);
+
+  const handleErrorClick = (errorId: string) => {
+    router.push(`/errors/${errorId}`);
+  };
+
+  const handleFilterChange = (key: keyof ErrorFilters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    if (key !== "search") {
+      setPage(PAGINATION.DEFAULT_PAGE);
+    }
+  };
 
   return (
     <motion.div
@@ -102,74 +132,56 @@ export default function ErrorsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" aria-hidden="true" />
             <input
               type="text"
               value={filters.search}
-              onChange={(e) =>
-                setFilters({ ...filters, search: e.target.value })
-              }
+              onChange={(e) => handleFilterChange("search", e.target.value)}
               className="w-full bg-bg-tertiary border border-bg-primary rounded-lg pl-10 pr-10 py-2 text-text-primary focus:outline-none focus:border-primary"
               placeholder="에러 검색..."
+              aria-label="에러 검색"
             />
             {filters.search && (
               <button
-                onClick={() => setFilters({ ...filters, search: "" })}
+                onClick={() => handleFilterChange("search", "")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+                aria-label="검색어 지우기"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             )}
           </div>
 
           {/* Severity Filter */}
-          <select
+          <FilterSelect
             value={filters.severity}
-            onChange={(e) =>
-              setFilters({ ...filters, severity: e.target.value })
-            }
-            className="bg-bg-tertiary border border-bg-primary rounded-lg px-4 py-2 text-text-primary focus:outline-none focus:border-primary"
-          >
-            <option value="ALL">모든 심각도</option>
-            <option value="CRITICAL">🔴 Critical</option>
-            <option value="HIGH">🟡 High</option>
-            <option value="MEDIUM">🟢 Medium</option>
-            <option value="LOW">⚪ Low</option>
-          </select>
+            onChange={(value) => handleFilterChange("severity", value)}
+            options={SEVERITY_FILTER_OPTIONS}
+            aria-label="심각도 필터"
+          />
 
           {/* Status Filter */}
-          <select
+          <FilterSelect
             value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="bg-bg-tertiary border border-bg-primary rounded-lg px-4 py-2 text-text-primary focus:outline-none focus:border-primary"
-          >
-            <option value="ALL">모든 상태</option>
-            <option value="UNRESOLVED">미해결</option>
-            <option value="RESOLVED">해결됨</option>
-            <option value="IGNORED">무시됨</option>
-          </select>
+            onChange={(value) => handleFilterChange("status", value)}
+            options={STATUS_FILTER_OPTIONS}
+            aria-label="상태 필터"
+          />
         </div>
       </motion.div>
 
       {/* Errors List */}
       {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-text-secondary">에러를 불러오는 중...</div>
-        </div>
+        <LoadingSpinner message={MESSAGES.LOADING.ERRORS} />
       ) : filteredErrors.length === 0 ? (
         <motion.div
           className="bg-bg-secondary rounded-xl p-12 text-center border border-bg-primary"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <motion.div
-            className="text-6xl mb-4"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", delay: 0.2 }}
-          >
+          <div className="text-6xl mb-4" role="img" aria-label="깨끗함">
             ✨
-          </motion.div>
+          </div>
           <h3 className="text-xl font-semibold text-text-primary mb-2">
             에러가 없습니다
           </h3>
@@ -193,18 +205,22 @@ export default function ErrorsPage() {
           {filteredErrors.map((error) => (
             <motion.div
               key={error.id}
-              className="bg-bg-secondary rounded-xl p-6 border border-bg-primary cursor-pointer"
-              onClick={() => (window.location.href = `/errors/${error.id}`)}
+              className="bg-bg-secondary rounded-xl p-6 border border-bg-primary cursor-pointer hover:border-primary transition-colors"
+              onClick={() => handleErrorClick(error.id)}
               variants={{
                 hidden: { opacity: 0, x: -20 },
                 visible: { opacity: 1, x: 0 }
               }}
-              whileHover={{ x: 5, borderColor: "#5865F2" }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ x: 5 }}
+              whileTap={{ scale: 0.99 }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${error.errorType} 에러 상세 보기`}
+              onKeyDown={(e) => e.key === "Enter" && handleErrorClick(error.id)}
             >
               <div className="flex items-start gap-4">
                 {/* Severity Emoji */}
-                <div className="text-3xl shrink-0">
+                <div className="text-3xl shrink-0" aria-hidden="true">
                   {getSeverityEmoji(error.severity)}
                 </div>
 
@@ -213,17 +229,11 @@ export default function ErrorsPage() {
                   {/* Header */}
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="text-lg font-semibold text-text-primary truncate">
                           {error.errorType}
                         </h3>
-                        <Badge
-                          variant={
-                            error.severity === "CRITICAL" ? "critical" :
-                            error.severity === "HIGH" ? "high" :
-                            error.severity === "MEDIUM" ? "medium" : "low"
-                          }
-                        >
+                        <Badge variant={getSeverityBadgeVariant(error.severity)}>
                           {error.severity}
                         </Badge>
                         {error.status === "RESOLVED" && (
@@ -262,7 +272,7 @@ export default function ErrorsPage() {
                   )}
 
                   {/* Stats */}
-                  <div className="flex items-center gap-6 text-sm text-text-muted">
+                  <div className="flex items-center gap-6 text-sm text-text-muted flex-wrap">
                     <div>
                       <span className="font-medium text-text-primary">
                         {formatNumber(error.occurrenceCount)}회
@@ -292,6 +302,8 @@ export default function ErrorsPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
+          role="navigation"
+          aria-label="페이지 네비게이션"
         >
           <Button
             onClick={() => setPage(Math.max(0, page - 1))}
