@@ -4,19 +4,16 @@ import com.bugshot.domain.error.dto.IngestRequest;
 import com.bugshot.domain.error.dto.IngestResponse;
 import com.bugshot.domain.error.entity.Error;
 import com.bugshot.domain.error.entity.ErrorOccurrence;
+import com.bugshot.domain.error.event.ErrorIngestedEvent;
 import com.bugshot.domain.error.repository.ErrorOccurrenceRepository;
 import com.bugshot.domain.error.repository.ErrorRepository;
-import com.bugshot.domain.notification.service.NotificationService;
 import com.bugshot.domain.project.entity.Project;
 import com.bugshot.domain.project.repository.ProjectRepository;
-import com.bugshot.domain.replay.service.SessionReplayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -26,8 +23,7 @@ public class ErrorService {
     private final ErrorRepository errorRepository;
     private final ErrorOccurrenceRepository occurrenceRepository;
     private final ProjectRepository projectRepository;
-    private final NotificationService notificationService;
-    private final SessionReplayService sessionReplayService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public IngestResponse ingestError(IngestRequest request) {
@@ -91,56 +87,37 @@ public class ErrorService {
         project.incrementErrorCount();
         projectRepository.save(project);
 
-        // 6. Calculate priority asynchronously
-        final String errorId = error.getId();
-        final String occurrenceUrl = request.getContext().getUrl();
-        CompletableFuture.runAsync(() -> calculateAndUpdatePriority(errorId, occurrenceUrl));
-
-        // 7. Save session replay asynchronously
-        if (request.getSessionReplay() != null && project.getSessionReplayEnabled()) {
-            final String occurrenceId = occurrence.getId();
-            CompletableFuture.runAsync(() ->
-                sessionReplayService.saveReplay(project.getId(), occurrenceId, request.getSessionReplay())
-            );
-        }
-
-        // 8. Send notifications asynchronously
-        final Error finalError = error;
-        final ErrorOccurrence finalOccurrence = occurrence;
-        CompletableFuture.runAsync(() ->
-            notificationService.notifyError(project, finalError, finalOccurrence)
-        );
+        // 6. 이벤트 발행 - Observer Pattern 적용
+        // 리스너들이 비동기로 다음 작업들을 처리:
+        // - PriorityCalculationListener: 우선순위 계산
+        // - SessionReplayListener: 세션 리플레이 저장
+        // - NotificationListener: 알림 전송
+        publishErrorIngestedEvent(project, error, occurrence, request);
 
         return IngestResponse.success(error.getId());
     }
 
-    @Async
-    @Transactional
-    public void calculateAndUpdatePriority(String errorId, String url) {
-        try {
-            Error error = errorRepository.findById(errorId)
-                .orElseThrow(() -> new IllegalArgumentException("Error not found: " + errorId));
+    /**
+     * ErrorIngestedEvent 발행
+     * <p>
+     * Observer Pattern: 에러 수집 완료 시 이벤트를 발행하여
+     * 여러 리스너들이 독립적으로 후속 작업을 처리하도록 합니다.
+     * </p>
+     */
+    private void publishErrorIngestedEvent(Project project, Error error,
+                                            ErrorOccurrence occurrence, IngestRequest request) {
+        ErrorIngestedEvent event = new ErrorIngestedEvent(
+                this,
+                project,
+                error,
+                occurrence,
+                request.getContext().getUrl(),
+                request.getSessionReplay(),
+                project.getSessionReplayEnabled()
+        );
 
-            // Count affected users
-            long affectedUsers = occurrenceRepository.countDistinctUsersByErrorId(errorId);
-            error.updateAffectedUsersCount((int) affectedUsers);
-
-            // Calculate priority
-            error.calculatePriority(url);
-
-            // Update project's total affected users
-            Project project = error.getProject();
-            long totalAffected = errorRepository.countTotalAffectedUsers(project.getId());
-            project.updateUsersAffected((int) totalAffected);
-
-            errorRepository.save(error);
-            projectRepository.save(project);
-
-            log.info("Updated priority for error {}: score={}, severity={}",
-                errorId, error.getPriorityScore(), error.getSeverity());
-        } catch (Exception e) {
-            log.error("Failed to calculate priority for error: " + errorId, e);
-        }
+        eventPublisher.publishEvent(event);
+        log.debug("ErrorIngestedEvent published: {}", event);
     }
 
     @Transactional(readOnly = true)
