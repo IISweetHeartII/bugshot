@@ -63,11 +63,10 @@ docker-compose logs -f             # View logs
 bugshot/
 ├── backend/          # Spring Boot 3.5 (Java 21) - Port 8081
 ├── frontend/         # Next.js 15 (TypeScript/React 19) - Port 3000
-├── packages/
-│   ├── sdk/          # @bugshot/browser-sdk (vanilla JS)
-│   ├── react/        # @bugshot/react (React wrapper)
-│   └── java-sdk/     # Java SDK (JitPack)
-└── docs/             # Deployment guides
+└── packages/
+    ├── sdk/          # @bugshot/browser-sdk (vanilla JS)
+    ├── react/        # @bugshot/react (React wrapper)
+    └── java-sdk/     # Java SDK (JitPack)
 ```
 
 ### Backend Domain Structure
@@ -170,4 +169,3 @@ src/
 - **Frontend**: Vercel (automatic from main branch)
 - **Backend**: Mac Mini via Docker + Cloudflare Tunnel
 - **Storage**: Cloudflare R2 for session replays
-- See `docs/DEPLOYMENT.md` for full guide

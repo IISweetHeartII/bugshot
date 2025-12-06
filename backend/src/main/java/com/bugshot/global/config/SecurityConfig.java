@@ -60,17 +60,49 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * CORS (Cross-Origin Resource Sharing) 설정
+     * 프론트엔드와 백엔드가 다른 도메인일 때 필요
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
+        // 허용할 Origin (도메인) 설정
         configuration.setAllowedOrigins(List.of(
             "http://localhost:3000",      // Next.js dev server
             "https://bugshot.log8.kr"     // Production frontend
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("*"));
+
+        // 허용할 HTTP 메서드
+        configuration.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
+
+        // 허용할 헤더 (보안을 위해 구체적으로 지정)
+        configuration.setAllowedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "X-User-Id",         // bugshot 인증 헤더
+            "X-API-Key",         // SDK API 키
+            "X-Requested-With",
+            "Accept",
+            "Origin"
+        ));
+
+        // 클라이언트가 접근 가능한 응답 헤더
+        configuration.setExposedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "X-RateLimit-Remaining",
+            "X-RateLimit-Limit"
+        ));
+
+        // 인증 정보 포함 허용 (쿠키, Authorization 헤더 등)
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);  // 1시간 캐시
+
+        // Preflight 요청 캐시 시간 (1시간)
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
