@@ -14,6 +14,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 /**
  * Rate Limiting Interceptor
  * 특정 엔드포인트에 대한 요청 제한
+ * 
+ * 참고: /api/ingest는 IngestController에서 직접 Rate Limit 처리
+ * (Request Body에서 API 키를 읽어야 하므로)
  */
 @Component
 @RequiredArgsConstructor
@@ -27,25 +30,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
-        // Ingest API에 대한 Rate Limit 적용
+        // /api/ingest는 IngestController에서 직접 Rate Limit 처리
+        // (Request Body에서 API 키를 읽어야 하므로 Controller에서 처리)
         if (request.getRequestURI().startsWith("/api/ingest")) {
-            String apiKey = extractApiKey(request);
-
-            if (apiKey != null) {
-                // API 키 기반 Rate Limit
-                if (!rateLimitService.allowRequest(apiKey)) {
-                    sendRateLimitError(response, "API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.");
-                    return false;
-                }
-            } else {
-                // IP 기반 Rate Limit (API 키 없는 경우)
-                String ipAddress = getClientIpAddress(request);
-                if (!rateLimitService.allowRequestByIp(ipAddress)) {
-                    sendRateLimitError(response, "요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.");
-                    return false;
-                }
-            }
+            return true;
         }
+
+        // 다른 API에 대한 Rate Limit 적용 (필요시 확장 가능)
 
         return true;
     }
@@ -60,24 +51,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
         ApiResponse<Void> errorResponse = ApiResponse.error(message);
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-    }
-
-    /**
-     * Request에서 API 키 추출
-     */
-    private String extractApiKey(HttpServletRequest request) {
-        // Header에서 추출
-        String apiKey = request.getHeader("X-API-Key");
-        if (apiKey != null) {
-            return apiKey;
-        }
-
-        // Body에서 추출 시도 (필요시)
-        // 실제로는 Body를 읽으면 Controller에서 다시 읽을 수 없으므로
-        // Request Body를 캐싱하는 Wrapper를 사용해야 함
-        // 여기서는 Header 방식만 지원
-
-        return null;
     }
 
     /**
