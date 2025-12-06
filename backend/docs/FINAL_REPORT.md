@@ -27,6 +27,88 @@ Bugshot is a comprehensive error monitoring service that captures JavaScript err
 - **Session Replay**: Records user sessions for debugging
 - **Multi-channel Notifications**: Supports Discord, Slack, Email, Kakao Work, Telegram, and Webhooks
 
+### System Architecture (Full Stack)
+
+This project consists of multiple components working together:
+
+| Component | Technology | Description |
+|-----------|------------|-------------|
+| **Backend API** | Spring Boot 3.5 (Java 21) | REST API server, business logic |
+| **Frontend** | Next.js 16 (React 19, TypeScript) | Web dashboard with BFF pattern |
+| **Browser SDK** | TypeScript | Error capture & session replay |
+| **React SDK** | React | React integration wrapper |
+| **Database** | MySQL 8.0 | Persistent data storage |
+| **Cache** | Redis 6.0 | Statistics caching, rate limiting |
+| **Storage** | Cloudflare R2 | Session replay file storage |
+
+### Deployment Status
+
+The project is **deployed and running in production**:
+
+| Service | Platform | URL | Status |
+|---------|----------|-----|--------|
+| **Frontend** | Vercel | https://bugshot.log8.kr | ✅ Live |
+| **Backend API** | Mac Mini + Docker | https://bugshot-api.log8.kr | ✅ Live |
+| **API Docs** | Swagger UI | https://bugshot-api.log8.kr/swagger-ui/index.html | ✅ Live |
+| **GitHub** | Public Repository | https://github.com/IISweetHeartII/bugshot | ✅ Public |
+
+#### Deployment Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Production Deployment                           │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│   [Users]                                                           │
+│      │                                                              │
+│      ▼                                                              │
+│   ┌──────────────────┐                                             │
+│   │   Cloudflare     │  CDN, DDoS Protection                       │
+│   │   (DNS + WAF)    │                                             │
+│   └────────┬─────────┘                                             │
+│            │                                                        │
+│      ┌─────┴─────┐                                                 │
+│      │           │                                                 │
+│      ▼           ▼                                                 │
+│ ┌─────────┐  ┌─────────────────┐                                  │
+│ │ Vercel  │  │ Cloudflare      │                                  │
+│ │         │  │ Tunnel          │                                  │
+│ │ Next.js │  └────────┬────────┘                                  │
+│ │ Frontend│           │                                           │
+│ └────┬────┘           ▼                                           │
+│      │         ┌─────────────────┐                                │
+│      │         │   Mac Mini      │                                │
+│      │         │   (Docker)      │                                │
+│      │         │                 │                                │
+│      │         │  ┌───────────┐  │                                │
+│      └────────▶│  │ Spring    │  │                                │
+│    (API calls) │  │ Boot API  │  │                                │
+│                │  └─────┬─────┘  │                                │
+│                │        │        │                                │
+│                │  ┌─────┴─────┐  │                                │
+│                │  │   MySQL   │  │                                │
+│                │  │   Redis   │  │                                │
+│                │  └───────────┘  │                                │
+│                └─────────────────┘                                │
+│                        │                                          │
+│                        ▼                                          │
+│                ┌───────────────┐                                  │
+│                │ Cloudflare R2 │  Session Replay Storage          │
+│                └───────────────┘                                  │
+│                                                                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### Deployment Technologies
+
+| Technology | Purpose |
+|------------|---------|
+| **Vercel** | Frontend hosting with automatic CI/CD from GitHub |
+| **Docker** | Backend containerization |
+| **Cloudflare Tunnel** | Secure backend exposure without public IP |
+| **Cloudflare R2** | S3-compatible object storage for replays |
+| **GitHub Actions** | CI/CD pipeline |
+
 ---
 
 ## (b) System Requirements and Build Instructions

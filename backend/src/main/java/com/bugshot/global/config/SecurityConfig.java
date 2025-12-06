@@ -71,7 +71,9 @@ public class SecurityConfig {
         // 허용할 Origin (도메인) 설정
         configuration.setAllowedOrigins(List.of(
             "http://localhost:3000",      // Next.js dev server
-            "https://bugshot.log8.kr"     // Production frontend
+            "http://localhost:4321",      // Astro dev server
+            "https://bugshot.log8.kr",    // Production frontend
+            "https://log8.kr"             // Blog (SDK integration)
         ));
 
         // 허용할 HTTP 메서드
