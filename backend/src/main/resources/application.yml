@@ -86,6 +86,9 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    mail:
+      enabled: false  # Mail is optional, don't fail health check
 
 # 커스텀 설정
 app:
