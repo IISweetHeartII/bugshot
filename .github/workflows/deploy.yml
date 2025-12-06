@@ -36,32 +36,39 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create .env file from GitHub Secrets
+        env:
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PW: ${{ secrets.DB_PW }}
+          CLOUDFLARE_R2_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_R2_ACCOUNT_ID }}
+          CLOUDFLARE_R2_BUCKET: ${{ secrets.CLOUDFLARE_R2_BUCKET }}
+          CLOUDFLARE_R2_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY }}
+          CLOUDFLARE_R2_SECRET_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_KEY }}
+          INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
         run: |
           cd ~/projects/bugshot
-          
+
           echo "🔐 Creating .env file from GitHub Secrets..."
-          cat > .env << ENVEOF
-# Database Configuration (Auto-generated from GitHub Secrets)
-DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
-DB_USER=${{ secrets.DB_USER }}
-DB_PW=${{ secrets.DB_PW }}
+          echo "# Database Configuration" > .env
+          echo "DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}" >> .env
+          echo "DB_USER=${DB_USER}" >> .env
+          echo "DB_PW=${DB_PW}" >> .env
+          echo "" >> .env
+          echo "# Spring Profile" >> .env
+          echo "SPRING_PROFILES_ACTIVE=prod" >> .env
+          echo "" >> .env
+          echo "# Cloudflare R2" >> .env
+          echo "CLOUDFLARE_R2_ACCOUNT_ID=${CLOUDFLARE_R2_ACCOUNT_ID}" >> .env
+          echo "CLOUDFLARE_R2_BUCKET=${CLOUDFLARE_R2_BUCKET}" >> .env
+          echo "CLOUDFLARE_R2_ACCESS_KEY=${CLOUDFLARE_R2_ACCESS_KEY}" >> .env
+          echo "CLOUDFLARE_R2_SECRET_KEY=${CLOUDFLARE_R2_SECRET_KEY}" >> .env
+          echo "" >> .env
+          echo "# Frontend URL" >> .env
+          echo "FRONTEND_BASE_URL=https://bugshot.log8.kr" >> .env
+          echo "" >> .env
+          echo "# Internal API Secret (BFF Pattern)" >> .env
+          echo "INTERNAL_API_SECRET=${INTERNAL_API_SECRET}" >> .env
 
-# Spring Profile
-SPRING_PROFILES_ACTIVE=prod
-
-# Cloudflare R2
-CLOUDFLARE_R2_ACCOUNT_ID=${{ secrets.CLOUDFLARE_R2_ACCOUNT_ID }}
-CLOUDFLARE_R2_BUCKET=${{ secrets.CLOUDFLARE_R2_BUCKET }}
-CLOUDFLARE_R2_ACCESS_KEY=${{ secrets.CLOUDFLARE_R2_ACCESS_KEY }}
-CLOUDFLARE_R2_SECRET_KEY=${{ secrets.CLOUDFLARE_R2_SECRET_KEY }}
-
-# Frontend URL
-FRONTEND_BASE_URL=https://bugshot.log8.kr
-
-# Internal API Secret (BFF Pattern)
-INTERNAL_API_SECRET=${{ secrets.INTERNAL_API_SECRET }}
-ENVEOF
-          
           echo "✅ .env file created successfully!"
 
       - name: Deploy to Mac Mini
