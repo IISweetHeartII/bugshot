@@ -1,5 +1,4 @@
 {
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet ./frontend",
   "buildCommand": "pnpm run build",
   "outputDirectory": ".next",
   "devCommand": "pnpm run dev",
