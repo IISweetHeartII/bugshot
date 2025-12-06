@@ -1,0 +1,9 @@
+# JitPack 빌드 설정 (모노레포용)
+jdk:
+  - openjdk11
+
+before_install:
+  - cd packages/java-sdk && chmod +x gradlew
+
+install:
+  - cd packages/java-sdk && ./gradlew clean build publishToMavenLocal -x test

@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.github.YOUR_GITHUB_USERNAME'  // GitHub username으로 변경하세요
+group = 'com.github.IISweetHeartII'
 version = '1.0.0'
 
 java {
@@ -37,7 +37,7 @@ publishing {
             pom {
                 name = 'BugShot Java SDK'
                 description = 'Java SDK for BugShot - Real-time error monitoring'
-                url = 'https://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk'
+                url = 'https://github.com/IISweetHeartII/bugshot'
 
                 licenses {
                     license {
@@ -48,16 +48,15 @@ publishing {
 
                 developers {
                     developer {
-                        id = 'YOUR_GITHUB_USERNAME'
-                        name = 'Your Name'
-                        email = 'your.email@example.com'
+                        id = 'IISweetHeartII'
+                        name = 'SweetHeart'
                     }
                 }
 
                 scm {
-                    connection = 'scm:git:git://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk.git'
-                    developerConnection = 'scm:git:ssh://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk.git'
-                    url = 'https://github.com/YOUR_GITHUB_USERNAME/bugshot-java-sdk'
+                    connection = 'scm:git:git://github.com/IISweetHeartII/bugshot.git'
+                    developerConnection = 'scm:git:ssh://github.com/IISweetHeartII/bugshot.git'
+                    url = 'https://github.com/IISweetHeartII/bugshot'
                 }
             }
         }
