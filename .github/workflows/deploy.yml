@@ -3,6 +3,11 @@ name: CD - Deploy to Mac Mini
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   build:
