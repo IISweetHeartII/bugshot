@@ -45,24 +45,6 @@ export function formatRelativeTime(date: Date | string): string {
 }
 
 /**
- * Get severity badge color
- */
-export function getSeverityColor(severity: string): string {
-  switch (severity.toUpperCase()) {
-    case "CRITICAL":
-      return "bg-severity-critical text-white";
-    case "HIGH":
-      return "bg-severity-high text-gray-900";
-    case "MEDIUM":
-      return "bg-severity-medium text-gray-900";
-    case "LOW":
-      return "bg-severity-low text-white";
-    default:
-      return "bg-gray-500 text-white";
-  }
-}
-
-/**
  * Get severity emoji
  */
 export function getSeverityEmoji(severity: string): string {
@@ -106,4 +88,95 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     console.error("Failed to copy:", error);
     return false;
   }
+}
+
+/**
+ * Get Badge variant based on severity
+ */
+export function getSeverityBadgeVariant(
+  severity: string
+): "destructive" | "default" | "secondary" | "outline" {
+  switch (severity.toUpperCase()) {
+    case "CRITICAL":
+    case "HIGH":
+      return "destructive";
+    case "MEDIUM":
+      return "default";
+    case "LOW":
+      return "secondary";
+    default:
+      return "outline";
+  }
+}
+
+/**
+ * Get status display info
+ */
+export function getStatusInfo(status: string): { label: string; color: string } {
+  switch (status.toUpperCase()) {
+    case "UNRESOLVED":
+      return { label: "미해결", color: "text-red-400" };
+    case "RESOLVED":
+      return { label: "해결됨", color: "text-green-400" };
+    case "IGNORED":
+      return { label: "무시됨", color: "text-gray-400" };
+    default:
+      return { label: status, color: "text-gray-400" };
+  }
+}
+
+/**
+ * Extract error message from unknown error
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return "알 수 없는 오류가 발생했습니다.";
+}
+
+/**
+ * Format date to localized string
+ */
+export function formatDate(date: Date | string): string {
+  const target = typeof date === "string" ? new Date(date) : date;
+  return target.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Format file size
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
+
+/**
+ * Format duration in seconds to readable string
+ */
+export function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}초`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes < 60) {
+    return remainingSeconds > 0 ? `${minutes}분 ${remainingSeconds}초` : `${minutes}분`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}시간 ${remainingMinutes}분`;
 }

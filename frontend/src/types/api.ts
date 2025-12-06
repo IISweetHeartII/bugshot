@@ -1,15 +1,40 @@
 /**
  * 백엔드 API 응답 타입 정의
+ * 백엔드 DTO와 동기화됨
  */
 
 /**
+ * 유효성 검증 에러
+ * 백엔드 ValidationError.java와 동기화됨
+ */
+export interface ValidationError {
+  field: string;
+  message: string;
+  rejectedValue?: unknown;
+}
+
+/**
  * 통일된 API 응답 형식
+ * 백엔드 ApiResponse.java와 동기화됨
  */
 export interface ApiResponse<T> {
   success: boolean;
+  code?: string; // 응답 코드 (COMMON_200, PROJECT_404 등)
   data: T | null;
   message: string | null;
   timestamp: string;
+  path?: string; // 요청 경로 (에러 시)
+  traceId?: string; // 추적 ID (에러 시)
+  errors?: ValidationError[]; // 유효성 검증 에러 목록
+}
+
+/**
+ * Session Replay 이벤트 (rrweb 호환)
+ */
+export interface SessionReplayEvent {
+  type: number;
+  data: Record<string, unknown>;
+  timestamp: number;
 }
 
 /**
@@ -24,6 +49,7 @@ export interface Pagination {
 
 /**
  * 페이지네이션이 포함된 API 응답
+ * 백엔드 PageResponse.java와 동기화됨
  */
 export interface PageResponse<T> {
   success: boolean;
@@ -34,7 +60,22 @@ export interface PageResponse<T> {
 }
 
 /**
+ * 프로젝트 통계 정보
+ * 백엔드 ProjectResponse.StatsInfo와 동기화됨
+ */
+export interface ProjectStatsInfo {
+  totalErrors: number;
+  totalUsersAffected: number;
+  criticalCount?: number;
+  highCount?: number;
+  mediumCount?: number;
+  lowCount?: number;
+  lastErrorAt: string | null;
+}
+
+/**
  * 프로젝트 응답
+ * 백엔드 ProjectResponse.java와 동기화됨
  */
 export interface ProjectResponse {
   id: string;
@@ -42,47 +83,40 @@ export interface ProjectResponse {
   description: string | null;
   environment: string;
   apiKey: string;
-  errorCount: number;
-  lastErrorAt: string | null;
+  sessionReplayEnabled: boolean;
+  sessionReplaySampleRate: number;
+  stats: ProjectStatsInfo;
   createdAt: string;
   updatedAt: string;
 }
 
 /**
  * 에러 응답
+ * 백엔드 ErrorResponse.java와 동기화됨
  */
 export interface ErrorResponse {
   id: string;
   projectId: string;
-  errorHash: string;
-  type: string;
   errorType: string;
-  message: string;
   errorMessage: string;
+  filePath: string | null;
+  lineNumber: number | null;
+  methodName: string | null;
+  stackTrace: string | null;
+  priorityScore: number;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-  status: 'UNRESOLVED' | 'RESOLVED' | 'IGNORED';
   occurrenceCount: number;
   affectedUsersCount: number;
-  priorityScore: number;
-  firstSeenAt: string;
-  lastSeenAt: string;
-  lastOccurredAt: string;
+  status: 'UNRESOLVED' | 'RESOLVED' | 'IGNORED';
   resolvedAt: string | null;
   resolvedBy: string | null;
-  stackTrace: string | null;
-  file: string | null;
-  filePath: string | null;
-  line: number | null;
-  lineNumber: number | null;
-  method: string | null;
-  methodName: string | null;
-  url: string | null;
-  httpMethod: string | null;
-  userAgent: string | null;
+  firstSeenAt: string;
+  lastSeenAt: string;
 }
 
 /**
  * 대시보드 통계 응답
+ * 백엔드 DashboardStatsResponse.java와 동기화됨
  */
 export interface DashboardStatsResponse {
   totalErrors: number;
@@ -91,8 +125,6 @@ export interface DashboardStatsResponse {
   affectedUsers: number;
   changeRate: number;
   avgResponseTime: number | null;
-  lastErrorTime: string | null;
-  trend: number;
   severityCount: {
     critical: number;
     high: number;
@@ -103,6 +135,7 @@ export interface DashboardStatsResponse {
 
 /**
  * 에러 트렌드 응답
+ * 백엔드 ErrorTrendResponse.java와 동기화됨
  */
 export interface ErrorTrendResponse {
   timestamp: string;
@@ -112,6 +145,7 @@ export interface ErrorTrendResponse {
 
 /**
  * 세션 리플레이 응답
+ * 백엔드 SessionReplayResponse.java와 동기화됨
  */
 export interface SessionReplayResponse {
   errorId: string;
@@ -129,12 +163,19 @@ export interface SessionReplayResponse {
 }
 
 /**
+ * 웹훅 타입
+ * 백엔드 WebhookConfig.WebhookType과 동기화됨
+ */
+export type WebhookType = 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'CUSTOM';
+
+/**
  * 웹훅 설정 응답
+ * 백엔드 WebhookConfigResponse.java와 동기화됨
  */
 export interface WebhookConfigResponse {
   id: string;
   projectId: string;
-  type: 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'KAKAO_WORK' | 'CUSTOM';
+  type: WebhookType;
   name: string;
   webhookUrl: string;
   enabled: boolean;
@@ -149,19 +190,23 @@ export interface WebhookConfigResponse {
 
 /**
  * 프로젝트 생성/수정 요청
+ * 백엔드 ProjectRequest.java와 동기화됨
  */
 export interface ProjectRequest {
   name: string;
   description?: string;
   environment: string;
+  sessionReplayEnabled?: boolean;
+  sessionReplaySampleRate?: number;
 }
 
 /**
  * 웹훅 설정 요청
+ * 백엔드 WebhookConfigRequest.java와 동기화됨
  */
 export interface WebhookConfigRequest {
   projectId: string;
-  type: 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'KAKAO_WORK' | 'CUSTOM';
+  type: WebhookType;
   webhookUrl: string;
   name: string;
   enabled?: boolean;
@@ -170,7 +215,14 @@ export interface WebhookConfigRequest {
 }
 
 /**
+ * Next.js API Route Context Types
+ */
+export type IdRouteContext = { params: Promise<{ id: string }> };
+export type ErrorIdRouteContext = { params: Promise<{ errorId: string }> };
+
+/**
  * 에러 수집 요청 (SDK에서 사용)
+ * 백엔드 IngestRequest.java와 동기화됨
  */
 export interface IngestRequest {
   apiKey: string;
@@ -191,6 +243,6 @@ export interface IngestRequest {
   sessionReplay?: {
     sessionId: string;
     durationMs: number;
-    events: any[];
+    events: SessionReplayEvent[];
   };
 }
