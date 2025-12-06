@@ -20,6 +20,10 @@
   ],
   "author": "BugShot Team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IISweetHeartII/bugshot"
+  },
   "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
     "@bugshot/browser-sdk": "^1.0.0"
