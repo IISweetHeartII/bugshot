@@ -24,9 +24,9 @@ public class DataInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         log.info("Running data initialization...");
 
-        // session_replay_enabled가 NULL인 프로젝트를 TRUE로 업데이트
+        // session_replay_enabled가 NULL이거나 FALSE인 프로젝트를 TRUE로 업데이트
         int updated = jdbcTemplate.update(
-                "UPDATE projects SET session_replay_enabled = true WHERE session_replay_enabled IS NULL"
+                "UPDATE projects SET session_replay_enabled = true WHERE session_replay_enabled IS NULL OR session_replay_enabled = false"
         );
 
         if (updated > 0) {
