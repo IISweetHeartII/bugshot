@@ -65,6 +65,7 @@ export interface CapturedError {
 }
 
 export interface ErrorContext {
+  userId?: string;
   url: string;
   httpMethod?: string;
   userAgent?: string;

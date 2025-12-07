@@ -6,7 +6,9 @@ import type { BugShotConfig, CapturedError, ErrorContext, IngestPayload, UserInf
 import { ErrorCapture } from './error-capture';
 import { SessionReplay } from './session-replay';
 import { Transport } from './transport';
-import { shouldSample, log } from './utils';
+import { shouldSample, log, generateUUID } from './utils';
+
+const ANONYMOUS_USER_KEY = 'bugshot_anonymous_user_id';
 
 export class BugShotClient {
   private config: BugShotConfig;
@@ -14,6 +16,7 @@ export class BugShotClient {
   private sessionReplay: SessionReplay | null = null;
   private transport: Transport;
   private initialized = false;
+  private anonymousUserId: string;
 
   constructor(config: BugShotConfig) {
     // 기본값 설정
@@ -32,10 +35,38 @@ export class BugShotClient {
       throw new Error('BugShot: API key is required');
     }
 
+    // 익명 사용자 ID 초기화 (localStorage에서 가져오거나 새로 생성)
+    this.anonymousUserId = this.getOrCreateAnonymousUserId();
+
     this.errorCapture = new ErrorCapture(this.config);
     this.transport = new Transport(this.config.endpoint!, this.config.debug);
 
     log(this.config.debug!, 'BugShot SDK initialized', this.config);
+  }
+
+  /**
+   * 익명 사용자 ID 가져오기 또는 생성
+   */
+  private getOrCreateAnonymousUserId(): string {
+    try {
+      let userId = localStorage.getItem(ANONYMOUS_USER_KEY);
+      if (!userId) {
+        userId = 'anon_' + generateUUID();
+        localStorage.setItem(ANONYMOUS_USER_KEY, userId);
+        log(this.config.debug!, 'Created anonymous user ID:', userId);
+      }
+      return userId;
+    } catch (e) {
+      // localStorage 접근 불가 시 (private browsing 등)
+      return 'anon_' + generateUUID();
+    }
+  }
+
+  /**
+   * 현재 사용자 ID 가져오기 (설정된 user.id 또는 익명 ID)
+   */
+  private getCurrentUserId(): string {
+    return this.config.user?.id || this.anonymousUserId;
   }
 
   /**
@@ -69,6 +100,7 @@ export class BugShotClient {
 
     this.initialized = true;
     log(this.config.debug!, 'BugShot started successfully');
+    log(this.config.debug!, 'User ID:', this.getCurrentUserId());
   }
 
   /**
@@ -81,13 +113,14 @@ export class BugShotClient {
       return;
     }
 
-    // Payload 생성
+    // Payload 생성 - userId 포함!
     const payload: IngestPayload = {
       apiKey: this.config.apiKey,
       error,
       context: {
         ...context,
         sessionId: this.errorCapture.getSessionId(),
+        userId: this.getCurrentUserId(),  // 사용자 ID 추가
       },
     };
 
@@ -166,12 +199,8 @@ export class BugShotClient {
           url: window.location.href,
           userAgent: navigator.userAgent,
           sessionId: this.errorCapture.getSessionId(),
+          userId: this.getCurrentUserId(),  // 사용자 ID 추가
           timestamp: new Date().toISOString(),
-        },
-        sessionReplay: {
-          sessionId: this.sessionReplay.getSessionId(),
-          durationMs: this.sessionReplay.getDuration(),
-          events: this.sessionReplay.getEvents(),
         },
       };
 
