@@ -17,7 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
@@ -33,6 +36,7 @@ public class SessionReplayService {
     private final SessionReplayRepository replayRepository;
     private final ErrorOccurrenceRepository occurrenceRepository;
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
     private final ObjectMapper objectMapper;
 
     @Value("${app.cloudflare.r2.bucket-name}")
@@ -176,24 +180,19 @@ public class SessionReplayService {
         String s3Key = replayUrl.replace("r2://" + bucketName + "/", "");
 
         try {
-            // Generate pre-signed URL for download
-            software.amazon.awssdk.services.s3.model.GetObjectRequest getRequest =
-                    software.amazon.awssdk.services.s3.model.GetObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(s3Key)
-                            .build();
+            // Generate pre-signed URL for download using injected S3Presigner
+            GetObjectRequest getRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Key)
+                    .build();
 
-            software.amazon.awssdk.services.s3.presigner.S3Presigner presigner =
-                    software.amazon.awssdk.services.s3.presigner.S3Presigner.create();
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(java.time.Duration.ofSeconds(expirationSeconds))
+                    .getObjectRequest(getRequest)
+                    .build();
 
-            software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest presignRequest =
-                    software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest.builder()
-                            .signatureDuration(java.time.Duration.ofSeconds(expirationSeconds))
-                            .getObjectRequest(getRequest)
-                            .build();
-
-            String presignedUrl = presigner.presignGetObject(presignRequest).url().toString();
-            presigner.close();
+            String presignedUrl = s3Presigner.presignGetObject(presignRequest).url().toString();
+            log.debug("Generated pre-signed URL for key: {}", s3Key);
 
             return presignedUrl;
         } catch (Exception e) {

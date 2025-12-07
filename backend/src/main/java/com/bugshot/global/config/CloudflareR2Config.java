@@ -7,6 +7,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.net.URI;
 
@@ -47,6 +48,31 @@ public class CloudflareR2Config {
 
         return S3Client.builder()
             .region(Region.of("auto")) // R2는 "auto" region 사용
+            .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
+            .endpointOverride(URI.create(r2Endpoint))
+            .build();
+    }
+
+    /**
+     * S3Presigner Bean for generating pre-signed URLs
+     * R2도 S3 호환 pre-signed URL을 지원
+     */
+    @Bean
+    public S3Presigner s3Presigner() {
+        String r2Endpoint = String.format("https://%s.r2.cloudflarestorage.com", accountId);
+
+        if (accessKey == null || accessKey.isBlank() || secretKey == null || secretKey.isBlank()) {
+            // 로컬 개발 환경: R2 없이 실행 가능
+            return S3Presigner.builder()
+                .region(Region.of("auto"))
+                .endpointOverride(URI.create(r2Endpoint))
+                .build();
+        }
+
+        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
+
+        return S3Presigner.builder()
+            .region(Region.of("auto"))
             .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
             .endpointOverride(URI.create(r2Endpoint))
             .build();
