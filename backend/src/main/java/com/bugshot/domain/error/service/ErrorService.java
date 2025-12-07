@@ -9,6 +9,7 @@ import com.bugshot.domain.error.repository.ErrorOccurrenceRepository;
 import com.bugshot.domain.error.repository.ErrorRepository;
 import com.bugshot.domain.project.entity.Project;
 import com.bugshot.domain.project.repository.ProjectRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
