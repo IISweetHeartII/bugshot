@@ -16,7 +16,7 @@ services:
       MYSQL_DATABASE: bugshot
       MYSQL_USER: ${DB_USER:?DB_USER is required}
       MYSQL_PASSWORD: ${DB_PW:?DB_PW is required}
-      TZ: Asia/Seoul
+      TZ: UTC
     ports:
       - "3307:3306"  # 외부 3307 (기존 MySQL 3306과 충돌 방지)
     volumes:
@@ -63,7 +63,7 @@ services:
       SERVER_PORT: 8081
 
       # Database (Docker 내부 네트워크)
-      DB_URL: jdbc:mysql://mysql:3306/bugshot?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      DB_URL: jdbc:mysql://mysql:3306/bugshot?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USER: ${DB_USER:?DB_USER is required}
       DB_PW: ${DB_PW:?DB_PW is required}
 

@@ -11,16 +11,16 @@ import jakarta.annotation.PostConstruct;
 public class BugshotApplication {
 
 	public static void main(String[] args) {
-		// JVM 기본 timezone을 Asia/Seoul로 설정
-		// LocalDateTime.now()가 KST 기준으로 동작하도록 함
-		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+		// JVM 기본 timezone을 UTC로 설정
+		// 모든 시간은 UTC로 저장되고, 프론트엔드에서 사용자 timezone으로 변환
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 		SpringApplication.run(BugshotApplication.class, args);
 	}
 
 	@PostConstruct
 	public void init() {
-		// Spring Context 초기화 후에도 timezone 보장
-		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+		// Spring Context 초기화 후에도 UTC timezone 보장
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}
 
 }

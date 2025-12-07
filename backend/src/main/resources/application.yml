@@ -1,7 +1,7 @@
 spring:
   # Jackson Timezone Configuration
   jackson:
-    time-zone: Asia/Seoul
+    time-zone: UTC
     serialization:
       write-dates-as-timestamps: false
   application:
@@ -13,7 +13,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL:jdbc:mysql://localhost:3306/error_monitor?serverTimezone=Asia/Seoul}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/error_monitor?serverTimezone=UTC}
     username: ${DB_USER:root}
     password: ${DB_PW:password}
     hikari:

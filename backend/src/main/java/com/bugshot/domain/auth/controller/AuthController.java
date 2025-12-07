@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -45,8 +44,7 @@ public class AuthController {
      * GET /api/auth/usage
      */
     @GetMapping("/usage")
-    public ResponseEntity<ApiResponse<UsageStatsResponse>> getUsageStats(Authentication authentication) {
-        String userId = authentication.getName();
+    public ResponseEntity<ApiResponse<UsageStatsResponse>> getUsageStats(@RequestHeader("X-User-Id") String userId) {
         log.info("Get usage stats: userId={}", userId);
         UsageStatsResponse response = authService.getUsageStats(userId);
         return ResponseEntity.ok(ApiResponse.success(response));
