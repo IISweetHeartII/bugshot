@@ -29,13 +29,14 @@ export default function DashboardPage() {
     try {
       setLoading(true);
 
-      const projects = await api.getProjects();
-      const projectId = projects[0]?.id || "default";
+      // selectedProject가 "all"이면 모든 프로젝트 통계를 합산
+      const projectId = selectedProject === "all" ? "all" : selectedProject;
 
       const [statsData, errorsData] = await Promise.all([
         api.getDashboardStats(projectId, period),
         api.getErrors({
-          projectId,
+          // 에러 목록은 프로젝트 필터 없이 전체 조회 (selectedProject가 "all"인 경우)
+          projectId: projectId === "all" ? undefined : projectId,
           page: PAGINATION.DEFAULT_PAGE,
           size: PAGINATION.DASHBOARD_ERRORS_SIZE,
           sort: "priority",

@@ -128,32 +128,113 @@ public class Error extends BaseEntity {
         this.affectedUsersCount = count;
     }
 
+    /**
+     * 우선순위 및 심각도 계산
+     * <p>
+     * 공식: priority = baseScore + (occurrence * users * pageWeight * errorTypeWeight * recencyBoost)
+     * - baseScore: 최소 1점 보장
+     * - errorTypeWeight: TypeError, ReferenceError 등은 더 높은 가중치
+     * - recencyBoost: 최근 1시간 내 발생하면 1.5배
+     * </p>
+     */
     public void calculatePriority(String url) {
+        double baseScore = 1.0;
         double pageWeight = determinePageWeight(url);
-        double priority = occurrenceCount * affectedUsersCount * pageWeight;
-        this.priorityScore = BigDecimal.valueOf(priority);
+        double errorTypeWeight = determineErrorTypeWeight();
+        double recencyBoost = calculateRecencyBoost();
+
+        // 0 방지를 위해 +1
+        double occurrenceFactor = Math.log10(occurrenceCount + 1) + 1;  // 로그 스케일로 급격한 증가 완화
+        double usersFactor = Math.max(1, affectedUsersCount);  // 최소 1
+
+        double priority = baseScore + (occurrenceFactor * usersFactor * pageWeight * errorTypeWeight * recencyBoost);
+
+        this.priorityScore = BigDecimal.valueOf(Math.round(priority * 100.0) / 100.0);  // 소수점 2자리
         this.severity = determineSeverity(priority, url);
+    }
+
+    /**
+     * 에러 타입별 가중치
+     */
+    private double determineErrorTypeWeight() {
+        if (errorType == null) return 1.0;
+
+        String type = errorType.toLowerCase();
+
+        // Critical 타입들 - 코드 버그 가능성 높음
+        if (type.contains("typeerror") || type.contains("referenceerror")) {
+            return 2.5;
+        }
+        // High 타입들 - 런타임 에러
+        if (type.contains("syntaxerror") || type.contains("rangeerror") || type.contains("urierror")) {
+            return 2.0;
+        }
+        // Medium 타입들 - 네트워크/비동기 관련
+        if (type.contains("networkerror") || type.contains("fetcherror") || type.contains("promise")) {
+            return 1.5;
+        }
+        // 일반 에러
+        if (type.contains("error")) {
+            return 1.2;
+        }
+        // 세션/이벤트 관련 - 상대적으로 낮은 우선순위
+        if (type.contains("session") || type.contains("event")) {
+            return 0.8;
+        }
+
+        return 1.0;
+    }
+
+    /**
+     * 최신성 부스트 - 최근에 발생한 에러일수록 높은 가중치
+     */
+    private double calculateRecencyBoost() {
+        if (lastSeenAt == null) return 1.0;
+
+        long hoursSinceLastSeen = java.time.Duration.between(lastSeenAt, LocalDateTime.now()).toHours();
+
+        if (hoursSinceLastSeen < 1) {
+            return 2.0;  // 1시간 이내: 2배
+        } else if (hoursSinceLastSeen < 6) {
+            return 1.5;  // 6시간 이내: 1.5배
+        } else if (hoursSinceLastSeen < 24) {
+            return 1.2;  // 24시간 이내: 1.2배
+        }
+        return 1.0;
     }
 
     private double determinePageWeight(String url) {
         if (url == null) return 1.0;
 
-        if (url.contains("/checkout") || url.contains("/payment")) {
+        // 결제/체크아웃 - 최고 우선순위
+        if (url.contains("/checkout") || url.contains("/payment") || url.contains("/order")) {
             return 10.0;
-        } else if (url.contains("/login") || url.contains("/signup")) {
+        }
+        // 인증 관련
+        if (url.contains("/login") || url.contains("/signup") || url.contains("/auth")) {
             return 8.0;
-        } else if (url.equals("/")) {
+        }
+        // 핵심 기능
+        if (url.contains("/dashboard") || url.contains("/api/")) {
             return 5.0;
+        }
+        // 홈페이지
+        if (url.equals("/") || url.endsWith(".com") || url.endsWith(".kr")) {
+            return 3.0;
         }
         return 1.0;
     }
 
     private Severity determineSeverity(double priority, String url) {
-        if (priority > 1000 || (url != null && url.contains("checkout"))) {
+        // 체크아웃 페이지의 모든 에러는 최소 HIGH
+        boolean isCriticalPage = url != null &&
+            (url.contains("/checkout") || url.contains("/payment"));
+
+        if (priority > 50 || (isCriticalPage && priority > 20)) {
             return Severity.CRITICAL;
-        } else if (priority > 100) {
+        } else if (priority > 20 || isCriticalPage) {
             return Severity.HIGH;
-        } else if (priority > 10) {
+        } else if (priority > 8) {
             return Severity.MEDIUM;
         }
         return Severity.LOW;

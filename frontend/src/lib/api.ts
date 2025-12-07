@@ -240,6 +240,32 @@ class ApiClient {
       data,
     });
   }
+
+  // Usage Stats API
+  async getUsageStats(): Promise<UsageStatsResponse> {
+    return this.request<UsageStatsResponse>({
+      method: 'GET',
+      url: '/api/auth/usage',
+    });
+  }
+
+  // Recalculate Priorities API
+  async recalculatePriorities(): Promise<{ updatedCount: number; message: string }> {
+    return this.request<{ updatedCount: number; message: string }>({
+      method: 'POST',
+      url: '/api/errors/recalculate-priorities',
+    });
+  }
+}
+
+// Usage Stats Response Type
+export interface UsageStatsResponse {
+  planType: string;
+  projectCount: number;
+  projectLimit: number;
+  monthlyEvents: number;
+  monthlyEventLimit: number;
+  sessionReplayRetentionDays: number;
 }
 
 export const api = new ApiClient();

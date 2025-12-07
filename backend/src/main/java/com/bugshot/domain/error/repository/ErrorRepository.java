@@ -95,4 +95,13 @@ public interface ErrorRepository extends JpaRepository<Error, String> {
     Page<Error> findByProjectIdIn(List<String> projectIds, Pageable pageable);
 
     Page<Error> findByProjectIdInAndStatus(List<String> projectIds, Error.ErrorStatus status, Pageable pageable);
+
+    /**
+     * 여러 프로젝트의 최근 에러 조회 (대시보드 통계용)
+     */
+    @Query("SELECT e FROM Error e WHERE e.project.id IN :projectIds " +
+           "AND e.lastSeenAt >= :since " +
+           "ORDER BY e.priorityScore DESC")
+    List<Error> findRecentErrorsForProjects(@Param("projectIds") List<String> projectIds,
+                                             @Param("since") LocalDateTime since);
 }

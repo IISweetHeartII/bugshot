@@ -172,7 +172,9 @@ export default function ProjectsPage() {
                     {project.name}
                   </h3>
                   <p className="text-sm text-text-muted">
-                    {formatRelativeTime(project.createdAt)}
+                    {project.stats.lastErrorAt
+                      ? `마지막 에러: ${formatRelativeTime(project.stats.lastErrorAt)}`
+                      : "에러 없음"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -200,8 +202,8 @@ export default function ProjectsPage() {
                 </p>
               )}
 
-              {/* Environment Badge */}
-              <div className="mb-4">
+              {/* Environment Badge & Stats */}
+              <div className="flex items-center justify-between mb-4">
                 <Badge
                   variant={
                     project.environment === "PRODUCTION"
@@ -213,6 +215,11 @@ export default function ProjectsPage() {
                 >
                   {project.environment}
                 </Badge>
+                {project.stats.totalErrors > 0 && (
+                  <span className="text-sm text-text-secondary">
+                    {project.stats.totalErrors}개 에러 · {project.stats.totalUsersAffected}명 영향
+                  </span>
+                )}
               </div>
 
               {/* API Key */}

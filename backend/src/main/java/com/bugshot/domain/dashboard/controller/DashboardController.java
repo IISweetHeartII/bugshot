@@ -26,34 +26,36 @@ public class DashboardController {
     /**
      * 대시보드 통계 조회
      * GET /api/dashboard/stats?projectId=xxx&period=7d
+     * projectId가 "all"이면 사용자의 모든 프로젝트 통계를 합산
      */
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<DashboardStatsResponse>> getStats(
-            @RequestParam String projectId,
+            @RequestParam(defaultValue = "all") String projectId,
             @RequestParam(defaultValue = "7d") String period,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         log.info("Get dashboard stats: userId={}, projectId={}, period={}", userId, projectId, period);
 
-        DashboardStatsResponse stats = dashboardService.getProjectStats(projectId, period);
+        DashboardStatsResponse stats = dashboardService.getProjectStats(userId, projectId, period);
         return ResponseEntity.ok(ApiResponse.success(stats));
     }
 
     /**
      * 에러 트렌드 조회
      * GET /api/dashboard/trends?projectId=xxx&period=7d
+     * projectId가 "all"이면 사용자의 모든 프로젝트 트렌드를 합산
      */
     @GetMapping("/trends")
     public ResponseEntity<ApiResponse<List<ErrorTrendResponse>>> getTrends(
-            @RequestParam String projectId,
+            @RequestParam(defaultValue = "all") String projectId,
             @RequestParam(defaultValue = "7d") String period,
             Authentication authentication
     ) {
         String userId = authentication.getName();
         log.info("Get error trends: userId={}, projectId={}, period={}", userId, projectId, period);
 
-        List<ErrorTrendResponse> trends = dashboardService.getErrorTrends(projectId, period);
+        List<ErrorTrendResponse> trends = dashboardService.getErrorTrends(userId, projectId, period);
         return ResponseEntity.ok(ApiResponse.success(trends));
     }
 }

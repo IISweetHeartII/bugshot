@@ -31,4 +31,13 @@ public interface ErrorOccurrenceRepository extends JpaRepository<ErrorOccurrence
                                                   @Param("since") LocalDateTime since);
 
     List<ErrorOccurrence> findBySessionId(String sessionId);
+
+    /**
+     * 특정 기간 내 프로젝트들의 이벤트 수 조회 (월간 사용량 계산용)
+     */
+    @Query("SELECT COUNT(eo) FROM ErrorOccurrence eo " +
+           "WHERE eo.error.project.id IN :projectIds " +
+           "AND eo.occurredAt >= :since")
+    long countByProjectIdsAndSince(@Param("projectIds") List<String> projectIds,
+                                    @Param("since") LocalDateTime since);
 }

@@ -129,4 +129,24 @@ public class ErrorController {
         errorService.reopenError(id);
         return ResponseEntity.ok(ApiResponse.success());
     }
+
+    /**
+     * 모든 에러 우선순위 일괄 재계산
+     * POST /api/errors/recalculate-priorities
+     */
+    @PostMapping("/recalculate-priorities")
+    public ResponseEntity<ApiResponse<RecalculateResponse>> recalculatePriorities(
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        log.info("Recalculating priorities for user: {}", userId);
+
+        int updatedCount = errorService.recalculateAllPriorities(userId);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                new RecalculateResponse(updatedCount, "우선순위가 재계산되었습니다.")
+        ));
+    }
+
+    public record RecalculateResponse(int updatedCount, String message) {}
 }

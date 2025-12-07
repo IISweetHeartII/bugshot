@@ -149,4 +149,46 @@ public class ErrorService {
         errorRepository.save(error);
         log.info("Error reopened: id={}", errorId);
     }
+
+    /**
+     * 사용자의 모든 에러 우선순위 일괄 재계산
+     */
+    @Transactional
+    public int recalculateAllPriorities(String userId) {
+        // 사용자의 모든 프로젝트 조회
+        List<String> projectIds = projectRepository.findByUserId(userId)
+                .stream()
+                .map(com.bugshot.domain.project.entity.Project::getId)
+                .toList();
+
+        if (projectIds.isEmpty()) {
+            return 0;
+        }
+
+        // 모든 에러 조회
+        List<Error> allErrors = errorRepository.findByProjectIdIn(
+                projectIds,
+                org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE)
+        ).getContent();
+
+        int updatedCount = 0;
+        for (Error error : allErrors) {
+            // 영향받은 사용자 수 재계산
+            long affectedUsers = occurrenceRepository.countDistinctUsersByErrorId(error.getId());
+            error.updateAffectedUsersCount((int) affectedUsers);
+
+            // 가장 최근 occurrence의 URL 가져오기
+            String url = occurrenceRepository.findFirstByErrorIdOrderByOccurredAtDesc(error.getId())
+                    .map(occ -> occ.getUrl())
+                    .orElse(null);
+
+            // 우선순위 재계산
+            error.calculatePriority(url);
+            errorRepository.save(error);
+            updatedCount++;
+        }
+
+        log.info("Recalculated priorities for {} errors (userId: {})", updatedCount, userId);
+        return updatedCount;
+    }
 }

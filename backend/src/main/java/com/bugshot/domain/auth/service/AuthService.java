@@ -2,12 +2,20 @@ package com.bugshot.domain.auth.service;
 
 import com.bugshot.domain.auth.dto.OAuthLoginRequest;
 import com.bugshot.domain.auth.dto.OAuthLoginResponse;
+import com.bugshot.domain.auth.dto.UsageStatsResponse;
 import com.bugshot.domain.auth.entity.User;
 import com.bugshot.domain.auth.repository.UserRepository;
+import com.bugshot.domain.error.repository.ErrorOccurrenceRepository;
+import com.bugshot.domain.project.entity.Project;
+import com.bugshot.domain.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
+    private final ErrorOccurrenceRepository errorOccurrenceRepository;
 
     @Transactional
     public OAuthLoginResponse processOAuthLogin(OAuthLoginRequest request) {
@@ -102,5 +112,34 @@ public class AuthService {
         }
 
         return user;
+    }
+
+    /**
+     * 사용량 통계 조회
+     */
+    @Transactional(readOnly = true)
+    public UsageStatsResponse getUsageStats(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        // 프로젝트 수 조회
+        List<Project> projects = projectRepository.findByUserId(userId);
+        int projectCount = projects.size();
+
+        // 월간 이벤트 수 조회 (이번 달 1일부터)
+        long monthlyEvents = 0;
+        if (!projects.isEmpty()) {
+            List<String> projectIds = projects.stream()
+                    .map(Project::getId)
+                    .toList();
+
+            LocalDateTime monthStart = LocalDateTime.now()
+                    .with(TemporalAdjusters.firstDayOfMonth())
+                    .withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+            monthlyEvents = errorOccurrenceRepository.countByProjectIdsAndSince(projectIds, monthStart);
+        }
+
+        return UsageStatsResponse.of(user, projectCount, monthlyEvents);
     }
 }

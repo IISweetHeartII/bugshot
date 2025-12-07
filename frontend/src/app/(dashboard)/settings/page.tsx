@@ -9,8 +9,9 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { api, UsageStatsResponse } from "@/lib/api";
 import type { ProjectResponse } from "@/types/api";
+import { formatNumber } from "@/lib/utils";
 
 interface NotificationSettings {
   emailNotification: boolean;
@@ -29,9 +30,12 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [usageStats, setUsageStats] = useState<UsageStatsResponse | null>(null);
+  const [loadingUsage, setLoadingUsage] = useState(true);
 
   useEffect(() => {
     loadProjects();
+    loadUsageStats();
   }, []);
 
   const loadProjects = async () => {
@@ -43,6 +47,18 @@ export default function SettingsPage() {
       console.error("Failed to load projects:", error);
     } finally {
       setLoadingProjects(false);
+    }
+  };
+
+  const loadUsageStats = async () => {
+    try {
+      setLoadingUsage(true);
+      const data = await api.getUsageStats();
+      setUsageStats(data);
+    } catch (error) {
+      console.error("Failed to load usage stats:", error);
+    } finally {
+      setLoadingUsage(false);
     }
   };
 
@@ -106,7 +122,7 @@ export default function SettingsPage() {
             <p className="text-text-secondary">{session?.user?.email}</p>
             <div className="mt-2">
               <span className="inline-block px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium">
-                FREE 플랜
+                {loadingUsage ? "..." : `${usageStats?.planType ?? "FREE"} 플랜`}
               </span>
             </div>
           </div>
@@ -125,16 +141,20 @@ export default function SettingsPage() {
             <div className="bg-bg-tertiary rounded-lg p-4">
               <div className="text-sm text-text-muted mb-1">프로젝트</div>
               <div className="text-2xl font-bold text-text-primary">
-                {loadingProjects ? "..." : `${projects.length} / 3`}
+                {loadingUsage ? "..." : `${usageStats?.projectCount ?? 0} / ${usageStats?.projectLimit ?? 3}`}
               </div>
             </div>
             <div className="bg-bg-tertiary rounded-lg p-4">
               <div className="text-sm text-text-muted mb-1">월간 이벤트</div>
-              <div className="text-2xl font-bold text-text-primary">0 / 10K</div>
+              <div className="text-2xl font-bold text-text-primary">
+                {loadingUsage ? "..." : `${formatNumber(usageStats?.monthlyEvents ?? 0)} / ${formatNumber(usageStats?.monthlyEventLimit ?? 10000)}`}
+              </div>
             </div>
             <div className="bg-bg-tertiary rounded-lg p-4">
               <div className="text-sm text-text-muted mb-1">세션 리플레이 보관</div>
-              <div className="text-2xl font-bold text-text-primary">7일</div>
+              <div className="text-2xl font-bold text-text-primary">
+                {loadingUsage ? "..." : `${usageStats?.sessionReplayRetentionDays ?? 7}일`}
+              </div>
             </div>
           </div>
 

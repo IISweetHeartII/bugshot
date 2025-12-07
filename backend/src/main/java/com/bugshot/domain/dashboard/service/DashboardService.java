@@ -4,6 +4,8 @@ import com.bugshot.domain.dashboard.dto.DashboardStatsResponse;
 import com.bugshot.domain.dashboard.dto.ErrorTrendResponse;
 import com.bugshot.domain.error.entity.Error;
 import com.bugshot.domain.error.repository.ErrorRepository;
+import com.bugshot.domain.project.entity.Project;
+import com.bugshot.domain.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,19 +29,35 @@ import java.util.stream.Collectors;
 public class DashboardService {
 
     private final ErrorRepository errorRepository;
+    private final ProjectRepository projectRepository;
 
     /**
      * 프로젝트 통계 조회
      * - Redis 캐싱 적용 (10분)
+     * - projectId가 "all"이면 userId의 모든 프로젝트 통계를 합산
      */
-    @Cacheable(value = "dashboardStats", key = "#projectId + ':' + #period")
+    @Cacheable(value = "dashboardStats", key = "#userId + ':' + #projectId + ':' + #period")
     @Transactional(readOnly = true)
-    public DashboardStatsResponse getProjectStats(String projectId, String period) {
+    public DashboardStatsResponse getProjectStats(String userId, String projectId, String period) {
         LocalDateTime startTime = getStartTime(period);
         LocalDateTime now = LocalDateTime.now();
 
-        // Fetch all errors for the project (without pagination for stats)
-        List<Error> allErrors = errorRepository.findRecentErrors(projectId, startTime.minusYears(10));
+        // Fetch all errors for the project(s)
+        List<Error> allErrors;
+        if ("all".equalsIgnoreCase(projectId)) {
+            // 사용자의 모든 프로젝트 에러 조회
+            List<String> projectIds = projectRepository.findByUserId(userId).stream()
+                    .map(Project::getId)
+                    .collect(Collectors.toList());
+
+            if (projectIds.isEmpty()) {
+                return buildEmptyStats();
+            }
+
+            allErrors = errorRepository.findRecentErrorsForProjects(projectIds, startTime.minusYears(10));
+        } else {
+            allErrors = errorRepository.findRecentErrors(projectId, startTime.minusYears(10));
+        }
 
         // 총 에러 발생 건수 (occurrence count 합산)
         long totalErrors = allErrors.stream()
@@ -90,16 +109,49 @@ public class DashboardService {
     }
 
     /**
+     * 빈 통계 응답 생성
+     */
+    private DashboardStatsResponse buildEmptyStats() {
+        return DashboardStatsResponse.builder()
+                .totalErrors(0)
+                .unresolvedErrors(0)
+                .todayErrors(0)
+                .affectedUsers(0)
+                .changeRate(0)
+                .severityCount(DashboardStatsResponse.SeverityCount.builder()
+                        .critical(0)
+                        .high(0)
+                        .medium(0)
+                        .low(0)
+                        .build())
+                .build();
+    }
+
+    /**
      * 에러 트렌드 조회 (시간대별)
      * - Redis 캐싱 적용 (10분)
+     * - projectId가 "all"이면 userId의 모든 프로젝트 트렌드를 합산
      */
-    @Cacheable(value = "errorTrends", key = "#projectId + ':' + #period")
+    @Cacheable(value = "errorTrends", key = "#userId + ':' + #projectId + ':' + #period")
     @Transactional(readOnly = true)
-    public List<ErrorTrendResponse> getErrorTrends(String projectId, String period) {
+    public List<ErrorTrendResponse> getErrorTrends(String userId, String projectId, String period) {
         LocalDateTime startTime = getStartTime(period);
         LocalDateTime now = LocalDateTime.now();
 
-        List<Error> errors = errorRepository.findRecentErrors(projectId, startTime);
+        List<Error> errors;
+        if ("all".equalsIgnoreCase(projectId)) {
+            List<String> projectIds = projectRepository.findByUserId(userId).stream()
+                    .map(Project::getId)
+                    .collect(Collectors.toList());
+
+            if (projectIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            errors = errorRepository.findRecentErrorsForProjects(projectIds, startTime);
+        } else {
+            errors = errorRepository.findRecentErrors(projectId, startTime);
+        }
 
         // 기간에 따라 시간 단위 결정 (1일: 시간별, 7일: 일별, 30일: 일별)
         ChronoUnit unit = period.equals("1d") ? ChronoUnit.HOURS : ChronoUnit.DAYS;
