@@ -57,9 +57,26 @@ public class NotificationService {
      * NotificationChannel과 WebhookConfig 두 가지 소스에서 알림을 전송합니다.
      * </p>
      */
+    /**
+     * 알림을 보내지 않을 에러 타입들 (이벤트성 타입)
+     */
+    private static final List<String> IGNORED_ERROR_TYPES = List.of(
+            "SessionEnd",
+            "SessionStart",
+            "PageView",
+            "NavigationEvent"
+    );
+
     @Async
     @Transactional
     public void notifyError(Project project, Error error, ErrorOccurrence occurrence) {
+        // 이벤트성 타입은 알림 스킵
+        if (IGNORED_ERROR_TYPES.stream().anyMatch(type ->
+                type.equalsIgnoreCase(error.getErrorType()))) {
+            log.debug("Skipping notification for event type: {}", error.getErrorType());
+            return;
+        }
+
         log.info("Sending notifications: projectId={}, errorId={}", project.getId(), error.getId());
 
         int sentCount = 0;

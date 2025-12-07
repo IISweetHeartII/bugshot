@@ -46,7 +46,7 @@ public class Project extends BaseEntity {
     private Environment environment = Environment.PRODUCTION;
 
     // Session Replay Settings
-    @Column(name = "session_replay_enabled")
+    @Column(name = "session_replay_enabled", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     @Builder.Default
     private Boolean sessionReplayEnabled = true;
 
