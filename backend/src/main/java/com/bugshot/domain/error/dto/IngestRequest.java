@@ -44,6 +44,7 @@ public class IngestRequest {
         private String stackTrace;
         private String file;
         private Integer line;
+        private Integer column;
         private String method;
     }
 
