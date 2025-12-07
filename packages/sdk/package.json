@@ -1,6 +1,6 @@
 {
   "name": "@bugshot/browser-sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Bugshot Browser SDK - Real-time error monitoring and session replay",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
