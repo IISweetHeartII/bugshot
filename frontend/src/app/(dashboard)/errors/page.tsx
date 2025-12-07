@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { Search, X } from "lucide-react";
+import { Search, X, RefreshCw } from "lucide-react";
 import {
   formatRelativeTime,
   getSeverityEmoji,
@@ -37,6 +37,7 @@ export default function ErrorsPage() {
   const [page, setPage] = useState<number>(PAGINATION.DEFAULT_PAGE);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedProject, setSelectedProject] = useState<string>("all");
+  const [recalculating, setRecalculating] = useState(false);
 
   useEffect(() => {
     loadErrors();
@@ -101,6 +102,19 @@ export default function ErrorsPage() {
       setPage(PAGINATION.DEFAULT_PAGE);
     }
   };
+  const handleRecalculate = async () => {
+    try {
+      setRecalculating(true);
+      const result = await api.recalculatePriorities();
+      toast.success(`우선순위 재계산 완료! ${result.updatedCount}개 에러 업데이트`);
+      loadErrors();
+    } catch (error) {
+      console.error("Failed to recalculate priorities:", error);
+      toast.error("우선순위 재계산에 실패했습니다.");
+    } finally {
+      setRecalculating(false);
+    }
+  };
 
   return (
     <motion.div
@@ -120,6 +134,15 @@ export default function ErrorsPage() {
             총 {formatNumber(filteredErrors.length)}개의 에러
           </p>
         </div>
+        <Button
+          onClick={handleRecalculate}
+          disabled={recalculating}
+          variant="outline"
+          className="gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${recalculating ? "animate-spin" : ""}`} />
+          {recalculating ? "재계산 중..." : "우선순위 재계산"}
+        </Button>
       </motion.div>
 
       {/* Filters */}
