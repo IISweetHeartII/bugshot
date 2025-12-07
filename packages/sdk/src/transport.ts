@@ -29,6 +29,7 @@ export class Transport {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
+        credentials: 'omit', // CORS: 쿠키/인증 정보 제외 (API Key로 인증)
       });
 
       if (response.ok) {
