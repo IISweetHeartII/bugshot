@@ -88,4 +88,11 @@ public interface ErrorRepository extends JpaRepository<Error, String> {
         GROUP BY e.severity
         """)
     List<Object[]> countErrorsBySeverityForProject(@Param("projectId") String projectId);
+
+    /**
+     * 여러 프로젝트의 에러 조회 (사용자의 모든 프로젝트 에러 조회용)
+     */
+    Page<Error> findByProjectIdIn(List<String> projectIds, Pageable pageable);
+
+    Page<Error> findByProjectIdInAndStatus(List<String> projectIds, Error.ErrorStatus status, Pageable pageable);
 }
