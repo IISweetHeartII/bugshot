@@ -1,0 +1,69 @@
+name: SDK - Publish to npm
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'  # sdk-v1.0.3 형태의 태그 푸시 시 실행
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: |
+          cd packages/sdk
+          pnpm install
+
+      - name: Build SDK
+        run: |
+          cd packages/sdk
+          pnpm run build
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/sdk-v}" >> $GITHUB_OUTPUT
+
+      - name: Update package.json version
+        run: |
+          cd packages/sdk
+          npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version
+
+      - name: Publish to npm
+        run: |
+          cd packages/sdk
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: SDK v${{ steps.version.outputs.VERSION }}
+          body: |
+            ## @bugshot/browser-sdk v${{ steps.version.outputs.VERSION }}
+
+            ### Installation
+            ```bash
+            npm install @bugshot/browser-sdk@${{ steps.version.outputs.VERSION }}
+            ```
+
+            ### Changes
+            See [CHANGELOG](https://github.com/IISweetHeartII/bugshot/blob/main/packages/sdk/CHANGELOG.md)
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
