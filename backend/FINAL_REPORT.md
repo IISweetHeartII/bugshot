@@ -292,7 +292,27 @@ domain/
     └── StatisticsDto.java
 ```
 
-### 5.2 Key Class Relationships
+### 5.2 UML Diagrams
+
+#### Class Diagram
+
+![Class Diagram](docs/class-diagram.svg)
+
+#### Use Case Diagram
+
+![Use Case Diagram](docs/use-case.png)
+
+#### Activity Diagram - Error Ingest Process
+
+![Activity Diagram - Error Ingest](docs/activity-error-ingest.png)
+
+#### Activity Diagram - Notification Process
+
+![Activity Diagram - Notification](docs/activity-notification.png)
+
+---
+
+### 5.3 Key Class Relationships (Text Reference)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐

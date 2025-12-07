@@ -13,7 +13,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL:jdbc:mysql://localhost:3306/error_monitor}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/error_monitor?serverTimezone=Asia/Seoul}
     username: ${DB_USER:root}
     password: ${DB_PW:password}
     hikari:

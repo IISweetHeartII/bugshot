@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { User, CreditCard, Bell } from "lucide-react";
+import { User, CreditCard, Bell, Webhook, ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+import type { ProjectResponse } from "@/types/api";
 
 interface NotificationSettings {
   emailNotification: boolean;
@@ -17,12 +20,31 @@ interface NotificationSettings {
 
 export default function SettingsPage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationSettings>({
     emailNotification: true,
     discordNotification: true,
     weeklyReport: false,
   });
   const [saving, setSaving] = useState(false);
+  const [projects, setProjects] = useState<ProjectResponse[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      setLoadingProjects(true);
+      const data = await api.getProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error("Failed to load projects:", error);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
 
   const handleNotificationChange = async (
     key: keyof NotificationSettings,
@@ -102,7 +124,9 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-bg-tertiary rounded-lg p-4">
               <div className="text-sm text-text-muted mb-1">프로젝트</div>
-              <div className="text-2xl font-bold text-text-primary">0 / 3</div>
+              <div className="text-2xl font-bold text-text-primary">
+                {loadingProjects ? "..." : `${projects.length} / 3`}
+              </div>
             </div>
             <div className="bg-bg-tertiary rounded-lg p-4">
               <div className="text-sm text-text-muted mb-1">월간 이벤트</div>
@@ -117,6 +141,42 @@ export default function SettingsPage() {
           <div className="pt-4">
             <Button disabled>Pro 플랜으로 업그레이드 (준비 중)</Button>
           </div>
+        </div>
+      </Card>
+
+      {/* Webhook Settings Section */}
+      <Card>
+        <div className="flex items-center gap-3 mb-6">
+          <Webhook className="w-6 h-6 text-primary" aria-hidden="true" />
+          <h3 className="text-xl font-semibold text-text-primary">웹훅 관리</h3>
+        </div>
+
+        <p className="text-text-secondary mb-4">
+          프로젝트별로 Discord, Slack 등의 웹훅을 설정하여 에러 발생 시 알림을 받으세요.
+        </p>
+
+        <div className="space-y-2">
+          {loadingProjects ? (
+            <p className="text-text-muted text-sm">프로젝트 목록을 불러오는 중...</p>
+          ) : projects.length === 0 ? (
+            <p className="text-text-muted text-sm">
+              프로젝트가 없습니다. 먼저 프로젝트를 생성하세요.
+            </p>
+          ) : (
+            projects.map((project) => (
+              <button
+                key={project.id}
+                onClick={() => router.push(`/projects/${project.id}/settings`)}
+                className="w-full flex items-center justify-between p-4 bg-bg-tertiary rounded-lg border border-bg-primary hover:border-primary transition-colors text-left"
+              >
+                <div>
+                  <h4 className="font-medium text-text-primary">{project.name}</h4>
+                  <p className="text-sm text-text-muted">{project.environment}</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-text-muted" aria-hidden="true" />
+              </button>
+            ))
+          )}
         </div>
       </Card>
 

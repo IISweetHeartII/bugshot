@@ -202,13 +202,20 @@ Benefits:
 
 ---
 
-## Slide 8: UML Class Diagram (20초)
+## Slide 8: UML Diagrams (40초)
 
 ### Content
 ```
 Class Diagram
 
-[Insert Class Diagram Image]
+![Class Diagram](class-diagram.svg)
+
+**Use Case Diagram:**
+![Use Case Diagram](use-case.png)
+
+**Activity Diagrams:**
+![Activity - Error Ingest](activity-error-ingest.png)
+![Activity - Notification](activity-notification.png)
 
 Key Classes:
 - User (OAuth, PlanType)
