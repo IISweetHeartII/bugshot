@@ -66,6 +66,11 @@ public class ErrorService {
         error = errorRepository.save(error);
 
         // 4. Create error occurrence
+        // Extract browser/os/device from SDK browserInfo/deviceInfo objects
+        String browser = extractBrowser(request.getContext());
+        String os = extractOs(request.getContext());
+        String device = extractDevice(request.getContext());
+
         ErrorOccurrence occurrence = ErrorOccurrence.builder()
             .error(error)
             .url(request.getContext().getUrl())
@@ -74,9 +79,9 @@ public class ErrorService {
             .ipAddress(request.getContext().getIpAddress())
             .userIdentifier(request.getContext().getUserId())
             .sessionId(request.getContext().getSessionId())
-            .browser(request.getContext().getBrowser())
-            .os(request.getContext().getOs())
-            .device(request.getContext().getDevice())
+            .browser(browser)
+            .os(os)
+            .device(device)
             .requestHeaders(request.getContext().getHeaders())
             .requestParams(request.getContext().getParams())
             .customData(request.getContext().getCustomData())
@@ -96,6 +101,50 @@ public class ErrorService {
         publishErrorIngestedEvent(project, error, occurrence, request);
 
         return IngestResponse.success(error.getId());
+    }
+
+
+    /**
+     * Extract browser string from context
+     */
+    private String extractBrowser(IngestRequest.ContextInfo context) {
+        if (context.getBrowser() != null && !context.getBrowser().isEmpty()) {
+            return context.getBrowser();
+        }
+        if (context.getBrowserInfo() != null) {
+            String name = context.getBrowserInfo().getName();
+            String version = context.getBrowserInfo().getVersion();
+            if (name != null) {
+                return version != null ? name + " " + version : name;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Extract OS string from context
+     */
+    private String extractOs(IngestRequest.ContextInfo context) {
+        if (context.getOs() != null && !context.getOs().isEmpty()) {
+            return context.getOs();
+        }
+        if (context.getBrowserInfo() != null && context.getBrowserInfo().getOs() != null) {
+            return context.getBrowserInfo().getOs();
+        }
+        return null;
+    }
+
+    /**
+     * Extract device string from context
+     */
+    private String extractDevice(IngestRequest.ContextInfo context) {
+        if (context.getDevice() != null && !context.getDevice().isEmpty()) {
+            return context.getDevice();
+        }
+        if (context.getDeviceInfo() != null && context.getDeviceInfo().getType() != null) {
+            return context.getDeviceInfo().getType();
+        }
+        return null;
     }
 
     /**

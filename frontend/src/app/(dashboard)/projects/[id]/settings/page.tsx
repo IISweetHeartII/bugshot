@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { ArrowLeft, Plus, Trash2, TestTube, Edit, Check, X } from "lucide-react";
 import { MESSAGES, WEBHOOK_TYPES } from "@/lib/constants";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage, formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -220,7 +220,7 @@ function WebhookCard({
             <span className="text-error">실패: {webhook.failureCount}회</span>
           )}
           {webhook.lastTriggeredAt && (
-            <span>마지막: {new Date(webhook.lastTriggeredAt).toLocaleString("ko-KR")}</span>
+            <span>마지막: {formatDate(webhook.lastTriggeredAt, "short")}</span>
           )}
         </div>
       </div>

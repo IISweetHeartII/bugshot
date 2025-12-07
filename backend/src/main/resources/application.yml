@@ -117,7 +117,7 @@ app:
   cloudflare:
     r2:
       account-id: ${CLOUDFLARE_R2_ACCOUNT_ID:}
-      bucket-name: ${CLOUDFLARE_R2_BUCKET:bugshot-replays}
+      bucket-name: ${CLOUDFLARE_R2_BUCKET:errorwatch-replays}
       access-key: ${CLOUDFLARE_R2_ACCESS_KEY:}
       secret-key: ${CLOUDFLARE_R2_SECRET_KEY:}
 

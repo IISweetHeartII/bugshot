@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Plus, Trash2, TestTube, Edit, Check, X } from "lucide-react";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage, formatDate } from "@/lib/utils";
 import { MESSAGES, WEBHOOK_TYPES } from "@/lib/constants";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -202,7 +202,7 @@ function WebhookCard({
               <span className="text-error">실패: {webhook.failureCount}회</span>
             )}
             {webhook.lastTriggeredAt && (
-              <span>마지막 전송: {new Date(webhook.lastTriggeredAt).toLocaleString()}</span>
+              <span>마지막 전송: {formatDate(webhook.lastTriggeredAt, "short")}</span>
             )}
           </div>
         </div>

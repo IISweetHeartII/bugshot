@@ -11,6 +11,7 @@ import {
   Users,
   Clock,
   MapPin,
+  Play,
 } from "lucide-react";
 import {
   formatRelativeTime,
@@ -180,6 +181,13 @@ export default function ErrorDetailPage() {
                   재오픈
                 </Button>
               )}
+              <Button
+                onClick={() => router.push(`/errors/${error.id}/replay`)}
+                variant="outline"
+              >
+                <Play className="w-5 h-5" aria-hidden="true" />
+                세션 리플레이
+              </Button>
             </div>
           </div>
 

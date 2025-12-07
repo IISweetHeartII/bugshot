@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Map;
 
 /**
@@ -43,7 +45,7 @@ public class WebhookNotificationStrategy implements NotificationStrategy {
                 "severity", error.getSeverity().name(),
                 "occurrenceCount", error.getOccurrenceCount(),
                 "url", occurrence.getUrl(),
-                "timestamp", occurrence.getOccurredAt().toString() + "Z"
+                "timestamp", occurrence.getOccurredAt().toInstant(ZoneOffset.UTC).toString()
         );
 
         webClientBuilder.build()
@@ -68,7 +70,7 @@ public class WebhookNotificationStrategy implements NotificationStrategy {
         Map<String, Object> payload = Map.of(
                 "type", "test",
                 "message", "BugShot 웹훅 테스트",
-                "timestamp", java.time.LocalDateTime.now().toString() + "Z"
+                "timestamp", Instant.now().toString()
         );
 
         webClientBuilder.build()

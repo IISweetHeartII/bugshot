@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -148,7 +148,7 @@ public class WebhookService {
                                 "title", title,
                                 "description", description,
                                 "color", 5814783, // Blue
-                                "timestamp", LocalDateTime.now().toString() + "Z"
+                                "timestamp", Instant.now().toString()
                         )
                 )
         );

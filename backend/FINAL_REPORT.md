@@ -2,142 +2,44 @@
 
 ## Final Project Report
 
-**Authors**: 김덕환 (20200477), 정은재 (20226495) **Assignment**: Project #4
-
-> **Live Demo Available!** This project is deployed and running in production.
->
-> - Frontend: https://bugshot.log8.kr
-> - API Documentation: https://bugshot-api.log8.kr/swagger-ui/index.html
-> - GitHub: https://github.com/IISweetHeartII/bugshot
+**Course**: Object Oriented Programming (Prof. Bong-Soo Sohn)
+**Team Members**: 김덕환 (20200477), 정은재 (20226495)
+**Project**: #4
 
 ---
 
-## 1. Project Overview
+## (a) Project Summary
 
-### 1.1 System Introduction
+### Project Title
 
-Bugshot is a comprehensive error monitoring service that captures JavaScript errors from web applications in real-time. Unlike traditional logging solutions, Bugshot provides intelligent error grouping, priority-based alerts, and session replay capabilities.
+**Bugshot** - Real-time JavaScript Error Monitoring System
 
-The system consists of multiple components working together as a full-stack application:
+### Team Members
 
-| Component       | Technology                        | Description                       |
-| --------------- | --------------------------------- | --------------------------------- |
-| **Backend API** | Spring Boot 3.5 (Java 21)         | REST API server, business logic   |
-| **Frontend**    | Next.js 16 (React 19, TypeScript) | Web dashboard with BFF pattern    |
-| **Browser SDK** | TypeScript                        | Error capture & session replay    |
-| **React SDK**   | React                             | React integration wrapper         |
-| **Database**    | MySQL 8.0                         | Persistent data storage           |
-| **Cache**       | Redis 6.0                         | Statistics caching, rate limiting |
+| Name   | Student ID | Role                               |
+| ------ | ---------- | ---------------------------------- |
+| 김덕환 | 20200477   | Team Leader, Backend Development   |
+| 정은재 | 20226495   | Backend Development, Documentation |
 
-### 1.2 Design Goals
+### Brief Description
 
-- **Real-time Error Detection**: Automatically capture JavaScript errors via SDK integration
-- **Intelligent Error Grouping**: Use SHA-256 hashing to deduplicate similar errors
-- **Priority-based Alerting**: Automatically calculate error severity and notify developers
-- **Session Replay**: Record user sessions to understand the context of errors
-- **Multi-channel Notifications**: Support Discord, Slack, Email, Kakao Work, Telegram, and Webhooks
+Bugshot is a backend API server that monitors JavaScript errors from web applications in real-time. The system provides:
 
----
+- **Error Collection**: SDK sends error data to the backend via REST API
+- **Intelligent Grouping**: SHA-256 hash-based error deduplication
+- **Priority Calculation**: Automatic severity scoring based on page importance and occurrence frequency
+- **Multi-channel Notifications**: Discord, Slack, Email, Telegram, Kakao Work integration
+- **Session Replay Storage**: Cloudflare R2 integration for user session recording
 
-## 2. System Architecture
-
-### 2.1 Overall Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Bugshot Architecture                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────┐     ┌──────────────┐     ┌──────────────┐         │
-│  │   SDK    │────▶│  Ingest API  │────▶│    Error     │         │
-│  │ (Browser)│     │  Controller  │     │   Service    │         │
-│  └──────────┘     └──────────────┘     └──────┬───────┘         │
-│                                               │                  │
-│                            ┌──────────────────┴────────┐        │
-│                            │     Event Publisher       │        │
-│                            └──────────────────┬────────┘        │
-│                                               │                  │
-│            ┌──────────────┬──────────────┬────┴───────┐         │
-│            ▼              ▼              ▼            ▼         │
-│    ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌────────┐     │
-│    │ Priority  │  │  Session  │  │Notification│  │ Stats  │     │
-│    │ Listener  │  │  Replay   │  │  Listener  │  │Listener│     │
-│    └───────────┘  └───────────┘  └─────┬─────┘  └────────┘     │
-│                                        │                        │
-│                              ┌─────────┴─────────┐              │
-│                              │ Strategy Registry │              │
-│                              └─────────┬─────────┘              │
-│                   ┌─────────┬─────────┬┴────────┬────────┐     │
-│                   ▼         ▼         ▼         ▼        ▼     │
-│              ┌────────┐┌────────┐┌────────┐┌────────┐┌────────┐│
-│              │Discord ││ Slack  ││ Email  ││ Kakao  ││Telegram││
-│              │Strategy││Strategy││Strategy││Strategy││Strategy││
-│              └────────┘└────────┘└────────┘└────────┘└────────┘│
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 2.2 Deployment Architecture
-
-The project is deployed and running in production:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Production Deployment                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   [Users]                                                        │
-│      │                                                           │
-│      ▼                                                           │
-│   ┌──────────────────┐                                          │
-│   │   Cloudflare     │  CDN, DDoS Protection                    │
-│   │   (DNS + WAF)    │                                          │
-│   └────────┬─────────┘                                          │
-│            │                                                     │
-│      ┌─────┴─────┐                                              │
-│      │           │                                              │
-│      ▼           ▼                                              │
-│ ┌─────────┐  ┌─────────────┐                                   │
-│ │ Vercel  │  │ Cloudflare  │                                   │
-│ │         │  │   Tunnel    │                                   │
-│ │ Next.js │  └──────┬──────┘                                   │
-│ │ Frontend│         │                                          │
-│ └────┬────┘         ▼                                          │
-│      │       ┌─────────────┐                                   │
-│      │       │  Mac Mini   │                                   │
-│      │       │  (Docker)   │                                   │
-│      │       │             │                                   │
-│      │       │ ┌─────────┐ │                                   │
-│      └──────▶│ │ Spring  │ │                                   │
-│   (API calls)│ │ Boot    │ │                                   │
-│              │ └────┬────┘ │                                   │
-│              │      │      │                                   │
-│              │ ┌────┴────┐ │                                   │
-│              │ │ MySQL   │ │                                   │
-│              │ │ Redis   │ │                                   │
-│              │ └─────────┘ │                                   │
-│              └─────────────┘                                   │
-│                     │                                           │
-│                     ▼                                           │
-│              ┌─────────────┐                                   │
-│              │Cloudflare R2│  Session Replay Storage           │
-│              └─────────────┘                                   │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-| Service         | Platform          | URL                                               | Status    |
-| --------------- | ----------------- | ------------------------------------------------- | --------- |
-| **Frontend**    | Vercel            | https://bugshot.log8.kr                           | ✅ Live   |
-| **Backend API** | Mac Mini + Docker | https://bugshot-api.log8.kr                       | ✅ Live   |
-| **API Docs**    | Swagger UI        | https://bugshot-api.log8.kr/swagger-ui/index.html | ✅ Live   |
-| **GitHub**      | Public Repository | https://github.com/IISweetHeartII/bugshot         | ✅ Public |
+**Live Demo**: https://bugshot-api.log8.kr/swagger-ui/index.html
 
 ---
 
-## 3. Build and Execution Instructions
+## (b) How to Compile and Execute
 
-### 3.1 System Requirements
+But I reccomend you to visit my frontend-website(https://bugshot.log8.kr) and backend-website(https://bugshot-api.log8.kr/swagger-ui/index.html)
+
+### System Requirements
 
 | Component  | Requirement                   |
 | ---------- | ----------------------------- |
@@ -147,593 +49,434 @@ The project is deployed and running in production:
 | Cache      | Redis 6.0+ (optional)         |
 | OS         | Windows 10+, macOS, Linux     |
 
-### 3.2 How to Compile
+### How to Compile
 
-```bash
-# Windows
+Windows:
 gradlew.bat build -x test
 
-# Linux/Mac
+Linux/Mac:
 ./gradlew build -x test
-```
 
-> **Note**: The `-x test` flag skips tests as they require MySQL connection.
+Note: -x test flag skips tests as they require MySQL connection.
 
-### 3.3 How to Execute
+### How to Execute
 
-#### Option 1: Use Live Demo (Recommended)
+**Option 1: Use Live Demo (Recommended)**
+Visit https://bugshot-api.log8.kr/swagger-ui/index.html to test the API without any setup.
 
-Visit https://bugshot.log8.kr to test the application without any setup.
-
-#### Option 2: Run JAR File
-
-```bash
+**Option 2: Run JAR File**
 java -jar build/libs/bugshot-0.0.1-SNAPSHOT.jar
-```
 
-> **Note**: Local execution requires MySQL 8.0 and Redis 6.0 configuration.
+**Option 3: Run with Gradle**
+./gradlew bootRun
 
-### 3.4 Verify Execution
+### Verify Execution
 
-- **Main Application**: http://localhost:8081
-- **Swagger UI**: http://localhost:8081/swagger-ui.html
-- **Health Check**: http://localhost:8081/actuator/health
+- Swagger UI: http://localhost:8081/swagger-ui.html
+- Health Check: http://localhost:8081/actuator/health
 
 ---
 
-## 4. Core Features
+## (c) Description on Functionality
 
-### 4.1 Error Collection (Ingest API)
+### API Endpoints
 
-The SDK captures JavaScript errors and sends them to the backend:
+#### 1. Authentication (AuthController)
 
-```java
-// IngestController.java
-@PostMapping("/api/v1/ingest")
-public ResponseEntity<IngestResponse> ingest(
-    @RequestHeader("X-API-Key") String apiKey,
-    @RequestBody IngestRequest request) {
+| Method | Endpoint        | Description                  |
+| ------ | --------------- | ---------------------------- |
+| POST   | /api/auth/oauth | OAuth login (GitHub, Google) |
+| GET    | /api/auth/me    | Get current user info        |
+| GET    | /api/auth/usage | Get usage statistics         |
 
-    Project project = projectService.validateApiKey(apiKey);
-    Error error = errorService.processError(project, request);
+#### 2. Project Management (ProjectController)
 
-    // Publish event for async processing
-    eventPublisher.publishEvent(new ErrorIngestedEvent(project, error));
+| Method | Endpoint                          | Description        |
+| ------ | --------------------------------- | ------------------ |
+| GET    | /api/projects                     | List all projects  |
+| POST   | /api/projects                     | Create new project |
+| GET    | /api/projects/{id}                | Get project detail |
+| PUT    | /api/projects/{id}                | Update project     |
+| DELETE | /api/projects/{id}                | Delete project     |
+| POST   | /api/projects/{id}/regenerate-key | Regenerate API key |
 
-    return ResponseEntity.ok(new IngestResponse(error.getId()));
-}
-```
+#### 3. Error Management (ErrorController)
 
-### 4.2 Error Deduplication
+| Method | Endpoint                 | Description                |
+| ------ | ------------------------ | -------------------------- |
+| GET    | /api/errors              | List errors (with filters) |
+| GET    | /api/errors/{id}         | Get error detail           |
+| PUT    | /api/errors/{id}/resolve | Mark as resolved           |
+| PUT    | /api/errors/{id}/ignore  | Mark as ignored            |
+| PUT    | /api/errors/{id}/reopen  | Reopen error               |
 
-Uses SHA-256 hash to group identical errors:
+#### 4. Error Ingestion (IngestController) - Core Feature
 
-```java
-// ErrorService.java
-public static String calculateErrorHash(String errorType, String filePath, Integer lineNumber) {
-    String input = errorType + "|" + filePath + "|" + lineNumber;
-    MessageDigest md = MessageDigest.getInstance("SHA-256");
-    byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
+| Method | Endpoint           | Description            |
+| ------ | ------------------ | ---------------------- |
+| POST   | /api/ingest        | Receive error from SDK |
+| GET    | /api/ingest/health | Health check           |
 
-    StringBuilder hexString = new StringBuilder();
-    for (byte b : hash) {
-        hexString.append(String.format("%02x", b));
+#### 5. Dashboard (DashboardController)
+
+| Method | Endpoint              | Description                   |
+| ------ | --------------------- | ----------------------------- |
+| GET    | /api/dashboard/stats  | Get statistics (Redis cached) |
+| GET    | /api/dashboard/trends | Get error trends              |
+
+#### 6. Webhook Configuration (WebhookController)
+
+| Method | Endpoint                | Description    |
+| ------ | ----------------------- | -------------- |
+| GET    | /api/webhooks           | List webhooks  |
+| POST   | /api/webhooks           | Create webhook |
+| PUT    | /api/webhooks/{id}      | Update webhook |
+| DELETE | /api/webhooks/{id}      | Delete webhook |
+| POST   | /api/webhooks/{id}/test | Test webhook   |
+
+#### 7. Session Replay (SessionReplayController)
+
+| Method | Endpoint                            | Description        |
+| ------ | ----------------------------------- | ------------------ |
+| GET    | /api/replays/{errorId}              | Get session replay |
+| GET    | /api/replays/{errorId}/download-url | Get download URL   |
+
+### Key Features
+
+1. **Error Deduplication**: Groups identical errors using SHA-256 hash of (errorType + filePath + lineNumber)
+
+2. **Priority Calculation**: Calculates severity based on:
+
+   - Page importance (checkout: 10x, login: 8x, homepage: 5x)
+   - Error type weight (TypeError: 2.5x, NetworkError: 1.5x)
+   - Occurrence frequency (logarithmic scale)
+   - Recency boost (within 1 hour: 2x)
+
+3. **Rate Limiting**: Protects API from abuse
+
+   - API key based: 100 requests/minute
+   - IP based: 20 requests/minute
+
+4. **Multi-channel Notifications**: Supports 6 notification channels with Strategy Pattern
+
+---
+
+## (d) How You Implemented (Important Implementation Issues)
+
+### 1. Error Deduplication Algorithm
+
+The system uses SHA-256 hash to group identical errors:
+
+    // Error.java
+    public static String calculateErrorHash(String errorType, String filePath, Integer lineNumber) {
+        String input = errorType + "|" + filePath + "|" + lineNumber;
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
+        // Convert to hex string
     }
-    return hexString.toString();
-}
-```
 
-### 4.3 Priority Calculation
+### 2. Priority Calculation
 
 Automatic priority scoring based on multiple factors:
 
-```java
-// Error.java
-public void calculatePriority(String url) {
-    double pageWeight = determinePageWeight(url);
-    // Checkout: 10x, Login: 8x, Homepage: 5x, Others: 1x
+    // Error.java
+    public void calculatePriority(String url) {
+        double pageWeight = determinePageWeight(url);      // URL-based weight
+        double errorTypeWeight = determineErrorTypeWeight(); // Error type weight
+        double occurrenceFactor = Math.log10(occurrenceCount + 1) + 1;
+        double recencyBoost = calculateRecencyBoost();     // Time-based boost
 
-    this.priorityScore = BigDecimal.valueOf(
-        occurrenceCount * affectedUsersCount * pageWeight
-    );
-}
-```
+        this.priorityScore = baseScore * pageWeight * errorTypeWeight * occurrenceFactor * recencyBoost;
+    }
 
-### 4.4 Multi-channel Notifications
+### 3. Event-Driven Architecture (Observer Pattern)
 
-| Channel    | Description                  |
-| ---------- | ---------------------------- |
-| Discord    | Webhook + Bot integration    |
-| Slack      | Webhook notifications        |
-| Email      | SMTP-based alerts            |
-| Kakao Work | Korean messenger integration |
-| Telegram   | Bot API notifications        |
-| Webhook    | Custom HTTP endpoints        |
+    // ErrorService.java - Publisher
+    eventPublisher.publishEvent(new ErrorIngestedEvent(project, error, occurrence));
+
+    // PriorityCalculationListener.java - Observer 1
+    @Async @EventListener
+    public void handleErrorIngested(ErrorIngestedEvent event) {
+        event.getError().calculatePriority(event.getContextUrl());
+    }
+
+    // NotificationListener.java - Observer 2
+    @Async @EventListener
+    public void handleErrorIngested(ErrorIngestedEvent event) {
+        notificationService.notifyError(event.getProject(), event.getError());
+    }
+
+### 4. Strategy Pattern for Notifications
+
+    // NotificationStrategy.java - Interface
+    public interface NotificationStrategy {
+        ChannelType getChannelType();
+        void send(NotificationChannel channel, Project project, Error error, ErrorOccurrence occurrence);
+    }
+
+    // 6 Implementations: Discord, Slack, Email, Telegram, Webhook, KakaoWork
+    @Component
+    public class DiscordNotificationStrategy implements NotificationStrategy { ... }
+    @Component
+    public class SlackNotificationStrategy implements NotificationStrategy { ... }
 
 ---
 
-## 5. Class Structure
+## (e) UML Modeling for System Design
 
-### 5.1 Domain Layer Overview
-
-```
-domain/
-├── auth/               # User authentication
-│   ├── User.java           - OAuth user entity (GitHub, Google)
-│   ├── UserRepository.java
-│   └── UserService.java
-│
-├── project/            # Project management
-│   ├── Project.java        - API key, environment settings
-│   ├── ProjectRepository.java
-│   └── ProjectService.java
-│
-├── error/              # Error handling core
-│   ├── Error.java          - Error grouping, priority
-│   ├── ErrorOccurrence.java - Individual occurrences
-│   ├── ErrorRepository.java
-│   └── ErrorService.java
-│
-├── notification/       # Multi-channel notifications
-│   ├── NotificationChannel.java
-│   ├── NotificationStrategy.java (interface)
-│   ├── DiscordNotificationStrategy.java
-│   ├── SlackNotificationStrategy.java
-│   ├── EmailNotificationStrategy.java
-│   └── NotificationService.java
-│
-├── replay/             # Session replay
-│   ├── SessionReplay.java
-│   ├── ReplayStorageService.java
-│   └── CloudflareR2Service.java
-│
-└── dashboard/          # Statistics
-    ├── DashboardService.java
-    └── StatisticsDto.java
-```
-
-### 5.2 UML Diagrams
-
-#### Class Diagram
+### Class Diagram
 
 ![Class Diagram](docs/class-diagram.svg)
 
-#### Use Case Diagram
+**Key Classes:**
+
+- BaseEntity: Abstract parent class with audit fields (createdAt, updatedAt)
+- User: OAuth user entity with plan management
+- Project: API key management, error collection settings
+- Error: Error grouping with priority calculation
+- ErrorOccurrence: Individual error occurrence records
+- NotificationChannel: Multi-channel notification configuration
+- NotificationStrategy: Interface for notification implementations
+
+### Use Case Diagram
 
 ![Use Case Diagram](docs/use-case.png)
 
-#### Activity Diagram - Error Ingest Process
+**Actors:**
 
-![Activity Diagram - Error Ingest](docs/activity-error-ingest.png)
+- SDK (Client): JavaScript SDK that sends error data
+- Developer: Web application developer using the dashboard
+- System (Worker): Backend async processors
 
-#### Activity Diagram - Notification Process
+### Activity Diagram - Error Ingest Process
+
+![Activity Diagram](docs/activity-error-ingest.png)
+
+**Flow:**
+
+1. SDK captures JavaScript error
+2. Send error data to /api/ingest
+3. Validate API key
+4. Calculate SHA-256 hash
+5. Find or create Error entity
+6. Create ErrorOccurrence
+7. Publish ErrorIngestedEvent
+8. Async listeners: Priority calculation, Session replay, Notifications
+
+### Activity Diagram - Notification Process
 
 ![Activity Diagram - Notification](docs/activity-notification.png)
 
 ---
 
-### 5.3 Key Class Relationships (Text Reference)
+## (f) Execution Results
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Class Relationships                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│                    ┌───────────┐                                │
-│                    │ BaseEntity│                                │
-│                    │-createdAt │                                │
-│                    │-updatedAt │                                │
-│                    └─────┬─────┘                                │
-│                          │ extends                              │
-│          ┌───────────────┼───────────────┐                     │
-│          ▼               ▼               ▼                     │
-│    ┌───────────┐  ┌───────────┐  ┌───────────────┐            │
-│    │   User    │  │  Project  │  │     Error     │            │
-│    ├───────────┤  ├───────────┤  ├───────────────┤            │
-│    │-email     │  │-name      │  │-errorHash     │            │
-│    │-name      │◀─┤-apiKey    │◀─┤-errorType     │            │
-│    │-planType  │──┤-user      │──┤-project       │            │
-│    │-oauthType │  │-errors    │  │-occurrences   │            │
-│    └───────────┘  └───────────┘  │-priorityScore │            │
-│                                  └───────┬───────┘            │
-│                                          │ 1:N                 │
-│                                          ▼                     │
-│                                  ┌───────────────┐            │
-│                                  │ErrorOccurrence│            │
-│                                  ├───────────────┤            │
-│                                  │-url           │            │
-│                                  │-userAgent     │            │
-│                                  │-sessionId     │            │
-│                                  │-stackTrace    │            │
-│                                  └───────────────┘            │
-│                                                                  │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │              <<interface>>                               │  │
-│   │            NotificationStrategy                          │  │
-│   ├─────────────────────────────────────────────────────────┤  │
-│   │ + getChannelType(): ChannelType                         │  │
-│   │ + send(channel, project, error, occurrence): void       │  │
-│   │ + sendTest(channel): void                               │  │
-│   └──────────────────────┬──────────────────────────────────┘  │
-│              ┌───────────┼───────────┬───────────┐             │
-│              ▼           ▼           ▼           ▼             │
-│         ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐        │
-│         │Discord │  │ Slack  │  │ Email  │  │Telegram│        │
-│         │Strategy│  │Strategy│  │Strategy│  │Strategy│        │
-│         └────────┘  └────────┘  └────────┘  └────────┘        │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+### 1. API Documentation (Swagger UI)
+
+![Swagger API Overview](docs/images/01-swagger-webhook-project.png)
+_Figure 1: Webhook and Project API endpoints in Swagger UI_
+
+![Swagger API - Error Controllers](docs/images/02-swagger-error-ingest-auth.png)
+_Figure 2: Error, Ingest, Auth, and Session Replay API endpoints_
+
+![Swagger API - Dashboard](docs/images/03-swagger-dashboard-schemas.png)
+_Figure 3: Dashboard API and data schemas_
+
+### 2. Error Ingest API (Core Feature)
+
+![POST /api/ingest](docs/images/04-swagger-ingest-request.png)
+_Figure 4: POST /api/ingest - SDK sends error data with this endpoint_
+
+### 3. Dashboard
+
+![Dashboard](docs/images/05-dashboard-overview.png)
+_Figure 5: Dashboard showing error statistics and priority-sorted errors_
+
+### 4. Project Management
+
+![Project List](docs/images/06-project-list.png)
+_Figure 6: Project list with API keys for SDK integration_
+
+![Project Detail](docs/images/07-project-detail.png)
+_Figure 7: Project detail showing errors, API key, recent unresolved errors_
+
+### 5. Error Detail
+
+![Error Detail](docs/images/08-error-detail.png)
+_Figure 8: Error detail - TypeError with HIGH priority, occurrences, affected users, stack trace_
+
+### 6. Webhook Configuration
+
+![User Settings](docs/images/09-user-settings.png)
+_Figure 9: User settings - plan, usage statistics, webhook management_
+
+![Webhook Add](docs/images/10-webhook-add-modal.png)
+_Figure 10: Adding Discord webhook_
+
+![Webhook List](docs/images/11-webhook-list.png)
+_Figure 11: Configured Discord webhook with test button_
+
+### 7. Notification Result
+
+![Discord Notification](docs/images/12-discord-notification.png)
+_Figure 12: Discord receiving error notifications from Bugshot_
+
+### 8. SDK Test Page
+
+![SDK Test](docs/images/13-sdk-test-page.png)
+_Figure 13: SDK test page with buttons to trigger different error types_
 
 ---
 
-## 6. Object-Oriented Concepts Applied
+## (g) Object-Oriented Concepts Applied
 
-### 6.1 Encapsulation
+### 1. Inheritance
 
-Each entity class encapsulates its data with private fields and exposes behavior through public methods:
+**BaseEntity** provides common audit fields to all entities:
 
-```java
-// Error.java - Business logic encapsulated in entity
-public class Error extends BaseEntity {
-    private Integer occurrenceCount = 1;
-    private BigDecimal priorityScore;
-
-    // Encapsulated behavior
-    public void incrementOccurrence() {
-        this.occurrenceCount++;
-        this.lastSeenAt = LocalDateTime.now();
+    @MappedSuperclass
+    public abstract class BaseEntity {
+        @CreatedDate private LocalDateTime createdAt;
+        @LastModifiedDate private LocalDateTime updatedAt;
     }
 
-    public void calculatePriority(String url) {
-        double pageWeight = determinePageWeight(url);
-        this.priorityScore = BigDecimal.valueOf(
-            occurrenceCount * affectedUsersCount * pageWeight
-        );
+    // All entities inherit from BaseEntity
+    @Entity public class User extends BaseEntity { ... }
+    @Entity public class Project extends BaseEntity { ... }
+    @Entity public class Error extends BaseEntity { ... }
+
+**Inheritance Hierarchy:**
+BaseEntity (abstract)
+├── User
+├── Project
+├── Error
+├── ErrorOccurrence
+├── NotificationChannel
+├── SessionReplay
+└── WebhookConfig
+
+### 2. Polymorphism
+
+**NotificationStrategy** interface with 6 implementations:
+
+    // Interface
+    public interface NotificationStrategy {
+        ChannelType getChannelType();
+        void send(NotificationChannel channel, Project project, Error error, ErrorOccurrence occurrence);
     }
 
-    // Page weight is internal implementation detail
-    private double determinePageWeight(String url) {
-        if (url.contains("/checkout")) return 10.0;
-        if (url.contains("/login")) return 8.0;
-        if (url.equals("/")) return 5.0;
-        return 1.0;
-    }
-}
-```
+    // Implementations
+    @Component public class DiscordNotificationStrategy implements NotificationStrategy { ... }
+    @Component public class SlackNotificationStrategy implements NotificationStrategy { ... }
+    @Component public class EmailNotificationStrategy implements NotificationStrategy { ... }
 
-### 6.2 Inheritance
-
-`BaseEntity` provides common audit fields to all entities:
-
-```java
-// BaseEntity.java - Parent class
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity {
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-}
-
-// User.java - Child class
-@Entity
-public class User extends BaseEntity {
-    // Inherits createdAt, updatedAt automatically
-    private String email;
-    private String name;
-    private PlanType planType;
-}
-```
-
-**Benefit**: All entities automatically have creation/modification timestamps without code duplication.
-
-### 6.3 Polymorphism
-
-`NotificationStrategy` interface with multiple implementations:
-
-```java
-// Interface definition
-public interface NotificationStrategy {
-    ChannelType getChannelType();
-    void send(NotificationChannel channel, Project project,
-              Error error, ErrorOccurrence occurrence);
-    void sendTest(NotificationChannel channel);
-}
-
-// Discord implementation
-@Component
-public class DiscordNotificationStrategy implements NotificationStrategy {
-    @Override
-    public ChannelType getChannelType() {
-        return ChannelType.DISCORD;
-    }
-
-    @Override
-    public void send(NotificationChannel channel, Project project,
-                     Error error, ErrorOccurrence occurrence) {
-        // Discord-specific webhook logic
-        String webhookUrl = channel.getConfig().get("webhookUrl");
-        // ... send to Discord
-    }
-}
-
-// Slack implementation
-@Component
-public class SlackNotificationStrategy implements NotificationStrategy {
-    @Override
-    public ChannelType getChannelType() {
-        return ChannelType.SLACK;
-    }
-
-    @Override
-    public void send(NotificationChannel channel, Project project,
-                     Error error, ErrorOccurrence occurrence) {
-        // Slack-specific webhook logic
-        // ... send to Slack
-    }
-}
-```
-
-**Usage** - Same interface, different behavior:
-
-```java
-// NotificationService.java
-public void sendNotification(NotificationChannel channel, ...) {
-    // Get appropriate strategy based on channel type
-    NotificationStrategy strategy = strategyRegistry.getStrategy(channel.getChannelType());
-
-    // Polymorphic call - actual implementation varies
+    // Polymorphic call - Runtime dispatch
+    NotificationStrategy strategy = registry.getStrategy(channel.getChannelType());
     strategy.send(channel, project, error, occurrence);
-}
-```
 
-### 6.4 Abstraction
+### 3. Encapsulation
 
-Complex notification logic abstracted behind simple interface:
+Entity classes expose behavior through methods, not direct field access:
 
-```java
-// Client code doesn't know implementation details
-notificationService.notifyError(project, error, occurrence);
+    @Entity
+    @Getter  // Only getter, no setter
+    public class Error extends BaseEntity {
+        private Integer occurrenceCount = 1;
+        private ErrorStatus status = ErrorStatus.UNRESOLVED;
 
-// NotificationService handles all complexity internally:
-// - Finding enabled channels for the project
-// - Filtering by severity threshold
-// - Selecting appropriate strategy for each channel
-// - Error handling and retry logic
-// - Async processing
-```
+        // Business logic encapsulated in methods
+        public void incrementOccurrence() {
+            this.occurrenceCount++;
+            this.lastSeenAt = LocalDateTime.now();
+        }
+
+        public void resolve(String userId) {
+            this.status = ErrorStatus.RESOLVED;
+            this.resolvedAt = LocalDateTime.now();
+        }
+
+        // Complex logic in private methods
+        private double determinePageWeight(String url) { ... }
+    }
+
+### 4. Abstraction
+
+Complex logic abstracted behind simple interfaces:
+
+    // Simple public interface
+    public void notifyError(Project project, Error error, ErrorOccurrence occurrence) {
+        List<NotificationChannel> channels = channelRepository.findByProjectIdAndEnabledTrue(project.getId());
+        for (NotificationChannel channel : channels) {
+            if (channel.shouldNotify(error.getSeverity())) {
+                sendNotification(channel, project, error, occurrence);
+            }
+        }
+    }
+
+    // Internal complexity hidden in private methods
+
+### 5. Design Patterns Applied
+
+| Pattern         | Location                   | Purpose                         |
+| --------------- | -------------------------- | ------------------------------- |
+| Strategy        | notification/strategy/\*   | Different notification channels |
+| Observer        | error/event/listener/\*    | Async event processing          |
+| Template Method | BaseEntity                 | Entity lifecycle management     |
+| Factory         | Error.calculateErrorHash() | Error hash generation           |
+| Repository      | \*Repository interfaces    | Data access abstraction         |
+| Builder         | Lombok @Builder            | Complex object construction     |
 
 ---
 
-## 7. Design Patterns Applied
+## (h) Conclusion
 
-### 7.1 Strategy Pattern
+### Project Summary
 
-**Purpose**: Encapsulate notification algorithms for different channels.
+Bugshot successfully demonstrates the application of Object-Oriented Programming concepts in building a real-world error monitoring system:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Strategy Pattern                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  NotificationService                                            │
-│         │                                                       │
-│         │ uses                                                  │
-│         ▼                                                       │
-│  ┌─────────────────┐                                           │
-│  │StrategyRegistry │─────────────────────────────────┐         │
-│  └─────────────────┘                                 │         │
-│         │                                            │         │
-│         │ getStrategy(channelType)                   │         │
-│         ▼                                            ▼         │
-│  ┌─────────────────────────────────────────────────────────┐  │
-│  │            <<interface>> NotificationStrategy            │  │
-│  └─────────────────────────────────────────────────────────┘  │
-│              △           △           △           △             │
-│              │           │           │           │             │
-│         ┌────┴────┐ ┌────┴────┐ ┌────┴────┐ ┌────┴────┐      │
-│         │Discord  │ │ Slack   │ │ Email   │ │Telegram │      │
-│         │Strategy │ │Strategy │ │Strategy │ │Strategy │      │
-│         └─────────┘ └─────────┘ └─────────┘ └─────────┘      │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+1. **Practical OOP Application**: Inheritance (BaseEntity), Polymorphism (NotificationStrategy), Encapsulation (Entity methods), and Abstraction (Service layer)
 
-**Benefit**: Easy to add new notification channels without modifying existing code.
+2. **Design Pattern Usage**: Strategy Pattern for notifications, Observer Pattern for event-driven architecture, Template Method for entity lifecycle
 
-### 7.2 Observer Pattern
+3. **Real-world Deployment**: The system is deployed at https://bugshot-api.log8.kr
 
-**Purpose**: Decouple error processing from side effects using Spring Events.
-
-```java
-// Publisher - ErrorService.java
-@Service
-public class ErrorService {
-    private final ApplicationEventPublisher eventPublisher;
-
-    public Error processError(Project project, IngestRequest request) {
-        Error error = saveError(project, request);
-
-        // Publish event - observers will handle async processing
-        eventPublisher.publishEvent(new ErrorIngestedEvent(project, error, occurrence));
-
-        return error;
-    }
-}
-
-// Observer 1 - NotificationListener.java
-@Component
-public class NotificationListener {
-    @Async
-    @EventListener
-    public void handleErrorIngested(ErrorIngestedEvent event) {
-        notificationService.notifyError(event.getProject(), event.getError());
-    }
-}
-
-// Observer 2 - PriorityCalculationListener.java
-@Component
-public class PriorityCalculationListener {
-    @Async
-    @EventListener
-    public void handleErrorIngested(ErrorIngestedEvent event) {
-        event.getError().calculatePriority(event.getOccurrence().getUrl());
-        errorRepository.save(event.getError());
-    }
-}
-
-// Observer 3 - StatisticsListener.java
-@Component
-public class StatisticsListener {
-    @Async
-    @EventListener
-    public void handleErrorIngested(ErrorIngestedEvent event) {
-        dashboardService.updateStatistics(event.getProject());
-    }
-}
-```
-
-**Benefit**: Loose coupling, async processing, easy to add new side effects.
-
-### 7.3 Builder Pattern
-
-**Purpose**: Create complex objects step by step using Lombok `@Builder`.
-
-```java
-// Entity creation with builder
-Error error = Error.builder()
-    .project(project)
-    .errorType("TypeError")
-    .errorMessage("Cannot read property 'name' of undefined")
-    .filePath("/checkout/payment.js")
-    .lineNumber(42)
-    .columnNumber(15)
-    .build();
-
-// DTO creation with builder
-ErrorDetailResponse response = ErrorDetailResponse.builder()
-    .id(error.getId())
-    .errorType(error.getErrorType())
-    .message(error.getErrorMessage())
-    .occurrenceCount(error.getOccurrenceCount())
-    .priorityScore(error.getPriorityScore())
-    .lastSeenAt(error.getLastSeenAt())
-    .build();
-```
-
-### 7.4 Repository Pattern
-
-**Purpose**: Abstract data access layer using Spring Data JPA.
-
-```java
-// Repository interface
-public interface ErrorRepository extends JpaRepository<Error, Long> {
-    Optional<Error> findByProjectAndErrorHash(Project project, String errorHash);
-    List<Error> findByProjectOrderByPriorityScoreDesc(Project project);
-
-    @Query("SELECT e FROM Error e WHERE e.project = :project AND e.status = :status")
-    Page<Error> findByProjectAndStatus(Project project, ErrorStatus status, Pageable pageable);
-}
-
-// Service uses repository without knowing implementation details
-@Service
-public class ErrorService {
-    private final ErrorRepository errorRepository;
-
-    public Error findOrCreateError(Project project, String errorHash) {
-        return errorRepository.findByProjectAndErrorHash(project, errorHash)
-            .orElseGet(() -> createNewError(project, errorHash));
-    }
-}
-```
-
----
-
-## 8. API Endpoints
-
-| Method | Endpoint                         | Description                 |
-| ------ | -------------------------------- | --------------------------- |
-| POST   | `/api/v1/ingest`                 | Receive error from SDK      |
-| GET    | `/api/v1/errors`                 | List errors for project     |
-| GET    | `/api/v1/errors/{id}`            | Get error detail            |
-| POST   | `/api/v1/errors/{id}/resolve`    | Mark as resolved            |
-| POST   | `/api/v1/errors/{id}/ignore`     | Mark as ignored             |
-| GET    | `/api/v1/projects`               | List user's projects        |
-| POST   | `/api/v1/projects`               | Create new project          |
-| GET    | `/api/v1/dashboard/stats`        | Get dashboard statistics    |
-| POST   | `/api/v1/notifications/channels` | Create notification channel |
-| POST   | `/api/v1/notifications/test`     | Test notification channel   |
-
----
-
-## 9. Conclusion
-
-### 9.1 Project Summary
-
-Bugshot successfully demonstrates the application of Object-Oriented Programming concepts in building a real-world error monitoring system. The project showcases:
-
-1. **Practical OOP Application**: Encapsulation, inheritance, and polymorphism are effectively used throughout the codebase.
-
-2. **Design Pattern Usage**: Strategy, Observer, Builder, and Repository patterns provide flexible, maintainable architecture.
-
-3. **Real-world Deployment**: The system is deployed and running in production, demonstrating practical software engineering skills.
-
-### 9.2 Technical Achievements
+### Technical Achievements
 
 - SHA-256 based error deduplication algorithm
-- Event-driven architecture for loose coupling
-- Strategy pattern for extensible notification system
-- RESTful API design with Swagger documentation
-- Full-stack deployment with CI/CD pipeline
+- Multi-factor priority scoring system
+- Event-driven architecture with Spring @Async
+- Strategy pattern supporting 6 notification channels
+- Rate limiting (API key + IP based)
+- RESTful API with Swagger documentation
 
-### 9.3 Lessons Learned
+### Lessons Learned
 
 - Importance of proper abstraction for maintainability
 - Value of design patterns in solving common problems
 - Benefits of event-driven architecture for scalability
-- Real-world deployment challenges and solutions
 
 ---
 
 ## Appendix
 
-### A. Technology Stack
+### Technology Stack
 
-| Category         | Technology                    |
-| ---------------- | ----------------------------- |
-| Language         | Java 21                       |
-| Framework        | Spring Boot 3.5               |
-| Database         | MySQL 8.0, Redis 6.0          |
-| ORM              | Spring Data JPA               |
-| Build            | Gradle 8.x                    |
-| API Docs         | SpringDoc OpenAPI (Swagger)   |
-| Async Processing | Spring @Async, @EventListener |
-| Storage          | Cloudflare R2                 |
+| Category  | Technology                    |
+| --------- | ----------------------------- |
+| Language  | Java 21                       |
+| Framework | Spring Boot 3.5               |
+| Database  | MySQL 8.0, Redis 6.0          |
+| ORM       | Spring Data JPA               |
+| Build     | Gradle 8.x                    |
+| API Docs  | SpringDoc OpenAPI (Swagger)   |
+| Async     | Spring @Async, @EventListener |
+| Storage   | Cloudflare R2                 |
 
-### B. Project Structure
+### Links
 
-```
-backend/
-├── src/main/java/com/bugshot/
-│   ├── BugshotApplication.java
-│   ├── domain/
-│   │   ├── auth/           # User authentication (OAuth)
-│   │   ├── project/        # Project management
-│   │   ├── error/          # Error handling core
-│   │   ├── notification/   # Multi-channel notifications
-│   │   ├── replay/         # Session replay
-│   │   ├── webhook/        # Webhook configuration
-│   │   └── dashboard/      # Statistics
-│   └── global/
-│       ├── config/         # Spring configurations
-│       ├── security/       # Security filters
-│       └── exception/      # Exception handling
-└── src/main/resources/
-    └── application.yml
-```
+- Service Link: https://bugshot.log8.kr
+- Swagger UI: https://bugshot-api.log8.kr/swagger-ui/index.html
+- GitHub: https://github.com/IISweetHeartII/bugshot
 
 ---
 

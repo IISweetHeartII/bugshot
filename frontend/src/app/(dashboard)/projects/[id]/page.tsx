@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { ArrowLeft, RefreshCw, Copy, Settings, TrendingDown, Users, AlertCircle } from "lucide-react";
-import { formatRelativeTime, formatNumber, getSeverityBadgeVariant } from "@/lib/utils";
+import { formatRelativeTime, formatNumber, getSeverityBadgeVariant, formatDate } from "@/lib/utils";
 import { MESSAGES, PAGINATION } from "@/lib/constants";
 import { useCopyToClipboard } from "@/hooks";
 import { motion } from "framer-motion";
@@ -145,7 +145,7 @@ export default function ProjectDetailPage() {
         />
         <StatCard
           title="생성일"
-          value={new Date(project.createdAt).toLocaleDateString()}
+          value={formatDate(project.createdAt)}
           icon={Users}
           iconColor="text-primary"
         />

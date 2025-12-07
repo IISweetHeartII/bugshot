@@ -60,12 +60,48 @@ public class IngestRequest {
         private String ipAddress;
         private String sessionId;
         private String userId;  // App's user ID (anonymized)
+        private String timestamp;  // ISO 8601 format from SDK
+
+        // Legacy fields (String) - for backward compatibility
         private String browser;
         private String os;
         private String device;
+
+        // New fields (Object) - from SDK
+        private BrowserInfo browserInfo;
+        private DeviceInfo deviceInfo;
+
         private Map<String, Object> headers;
         private Map<String, Object> params;
         private Map<String, Object> customData;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BrowserInfo {
+        private String name;
+        private String version;
+        private String os;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DeviceInfo {
+        private String type;  // mobile, tablet, desktop
+        private ViewportInfo viewport;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ViewportInfo {
+        private Integer width;
+        private Integer height;
     }
 
     @Data
