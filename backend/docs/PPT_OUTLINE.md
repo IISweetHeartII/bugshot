@@ -25,7 +25,7 @@ December 2025
 ```
 
 ### Speaker Notes
-"Hello, we are Team Bugshot. Today we will present our project, Bugshot - a real-time error monitoring system."
+"Good morning/afternoon everyone. We are Team Bugshot. I am [Name 1] and this is [Name 2]. Today, we will present Bugshot - a real-time error monitoring system that we developed using object-oriented programming principles."
 
 ---
 
@@ -44,7 +44,7 @@ The Problem
 ```
 
 ### Speaker Notes
-"JavaScript errors in web applications often go unnoticed. Users experience bugs but rarely report them - they simply leave. By the time developers learn about these issues, they've already lost users."
+"Let us start with the problem we are solving. JavaScript errors in web applications often occur silently in production. When users encounter bugs, they do not report them - they simply leave the website. According to recent studies, 88% of users abandon websites after a bad experience. By the time developers discover these issues through user complaints, they have already lost valuable customers. This is where Bugshot comes in."
 
 ---
 
@@ -102,50 +102,16 @@ Technologies:
 • Frontend: Next.js 16, React 19, TypeScript
 • Database: MySQL 8.0, Redis 6.0
 • Storage: Cloudflare R2
+
+Live: bugshot.log8.kr | API: bugshot-api.log8.kr
 ```
 
 ### Speaker Notes
-"Our system is a full-stack application. The Browser SDK captures errors and sends them to our Spring Boot backend. The Next.js frontend provides a dashboard for developers. We use MySQL for data storage, Redis for caching, and Cloudflare R2 for session replay files."
+"Here is our system architecture. On the client side, we have our Browser SDK written in TypeScript. It captures errors and sends them to our Spring Boot backend. The backend is built with Java 21 and Spring Boot 3.5. It processes errors, stores them in MySQL, and uses Redis for caching. Our frontend dashboard is built with Next.js 16 and React 19. The entire system is deployed in production - you can access it live at bugshot.log8.kr."
 
 ---
 
-## Slide 5: Deployment Status (30초)
-
-### Content
-```
-🚀 Live in Production!
-
-┌─────────────────────────────────────────────────┐
-│              Deployment Architecture             │
-├─────────────────────────────────────────────────┤
-│                                                  │
-│  [Cloudflare CDN + WAF]                         │
-│         │              │                        │
-│         ▼              ▼                        │
-│    ┌─────────┐   ┌─────────────┐               │
-│    │ Vercel  │   │ Cloudflare  │               │
-│    │ (Front) │   │   Tunnel    │               │
-│    └─────────┘   └──────┬──────┘               │
-│                         ▼                       │
-│                  ┌─────────────┐               │
-│                  │  Mac Mini   │               │
-│                  │  (Docker)   │               │
-│                  └─────────────┘               │
-│                                                  │
-└─────────────────────────────────────────────────┘
-
-🔗 Live URLs:
-• Frontend: bugshot.log8.kr
-• API Docs: bugshot-api.log8.kr/swagger-ui
-• GitHub: github.com/IISweetHeartII/bugshot
-```
-
-### Speaker Notes
-"What makes this project special is that it's actually deployed and running in production. You can access our frontend at bugshot.log8.kr and the API documentation at bugshot-api.log8.kr. The source code is available on our public GitHub repository. This demonstrates real-world deployment experience."
-
----
-
-## Slide 6: OOP Concepts Applied (45초)
+## Slide 5: OOP Concepts Applied (45초)
 
 ### Content
 ```
@@ -170,11 +136,11 @@ Object-Oriented Design
 ```
 
 ### Speaker Notes
-"We applied multiple OOP concepts. Encapsulation keeps business logic inside entities. Inheritance from BaseEntity provides common audit fields. Polymorphism through the NotificationStrategy interface allows different notification implementations. We also used Strategy, Observer, and Builder patterns."
+"Now, let us discuss the OBJECT-ORIENTED CONCEPTS we applied. First, ENCAPSULATION. Business logic is encapsulated inside entity classes. For example, the Error entity has a calculatePriority method that determines severity based on internal state. Second, INHERITANCE. All our entities extend a BaseEntity class, which provides common audit fields like createdAt and updatedAt. This follows the DRY principle. Third, POLYMORPHISM. We defined a NotificationStrategy interface, and each notification channel implements this interface with its own send method. We also applied several DESIGN PATTERNS: The Strategy Pattern for notifications, The Observer Pattern for event-based processing, and The Builder Pattern for entity construction."
 
 ---
 
-## Slide 7: Key Implementation - Strategy Pattern (30초)
+## Slide 6: Key Implementation - Strategy Pattern (30초)
 
 ### Content
 ```
@@ -198,11 +164,11 @@ Benefits:
 ```
 
 ### Speaker Notes
-"The Strategy pattern is key to our notification system. Each channel implements the NotificationStrategy interface. To add a new channel like Microsoft Teams, we simply create a new strategy class - no existing code needs to change."
+"Let me explain the STRATEGY PATTERN in more detail, as it is the core of our notification system. We have a NotificationStrategy interface with two methods: getChannelType and send. Each notification channel implements this interface. The key benefit is EXTENSIBILITY. When we need to add a new channel like Microsoft Teams, we simply create a new strategy class. No existing code needs to be modified. This follows the Open-Closed Principle: Open for extension, closed for modification."
 
 ---
 
-## Slide 8: UML Diagrams (40초)
+## Slide 7: UML Diagrams (40초)
 
 ### Content
 ```
@@ -226,11 +192,11 @@ Key Classes:
 ```
 
 ### Speaker Notes
-"This class diagram shows our main entities and their relationships. User owns Projects, Projects contain Errors, and each Error has multiple Occurrences."
+"Here are our UML diagrams. The CLASS DIAGRAM shows our main entities and their relationships. User owns Projects, Projects contain Errors, and each Error has multiple ErrorOccurrences. Notice how all entities inherit from BaseEntity. The USE CASE DIAGRAM shows the main actors and their interactions. The ACTIVITY DIAGRAMS show two key workflows: Error ingestion and Notification processing. These diagrams were essential for designing our system before writing any code."
 
 ---
 
-## Slide 9: Demo Introduction (15초)
+## Slide 8: Demo Introduction (15초)
 
 ### Content
 ```
@@ -248,7 +214,7 @@ Live Demo
 
 ---
 
-## Slide 10-14: Demo Slides (4분)
+## Slide 9-13: Demo Slides (4분)
 
 ### Demo Flow
 
@@ -313,7 +279,7 @@ because the error severity was CRITICAL
 
 ---
 
-## Slide 15: Conclusion (30초)
+## Slide 14: Conclusion (30초)
 
 ### Content
 ```
@@ -333,11 +299,11 @@ Java 21, Spring Boot 3.5, MySQL, Redis
 ```
 
 ### Speaker Notes
-"In summary, Bugshot provides comprehensive error monitoring with intelligent grouping and multi-channel alerts. We successfully applied OOP concepts including Strategy and Observer patterns. Thank you for your attention."
+"To summarize, Bugshot provides: Real-time error monitoring with SDK integration, Intelligent error grouping using SHA-256 hashing, Priority-based alerting through multiple channels, And session replay for debugging. We successfully applied core OOP concepts: Encapsulation, Inheritance, and Polymorphism. We also used Strategy, Observer, and Builder patterns. This project gave us hands-on experience with full-stack development and object-oriented design. Thank you for your attention."
 
 ---
 
-## Slide 16: Q&A
+## Slide 15: Q&A
 
 ### Content
 ```
@@ -362,9 +328,12 @@ Thank you!
 ### 시간 배분
 | Section | Time |
 |---------|------|
-| Slides 1-7 (What & How) | 3분 |
-| Demo | 4분 |
-| Total | 7분 |
+| What (Problem & Solution) | 1-3 | ~1.5분 |
+| How (Architecture, OOP, UML) | 4-7 | ~2분 |
+| Demo Introduction | 8 | ~15s |
+| Demo | 9-13 | ~4 |
+| Conclusion & Q&A | 14-15 | ~30s |
+| **Total** | **15 slides** | **~7분 |
 
 ### 데모 준비
 1. 미리 Docker로 MySQL, Redis 실행
@@ -381,4 +350,10 @@ Thank you!
    - "We calculate SHA-256 hash of error type, file path, and line number."
 
 3. "What happens if notification fails?"
-   - "Notification failures are logged but don't affect the main error processing. We use async processing."
+   - "Notification failures are logged but do not affect the main error processing. We use asynchronous processing with Spring Async annotation, so the error is still saved to the database even if the notification fails."
+
+4. "How does priority scoring work?"
+   - "We use a weighted algorithm that considers page importance. Checkout pages have a 10x multiplier, login pages 8x, and homepage 5x. We also factor in error frequency and the number of affected users."
+
+5. "Why did you use inheritance for BaseEntity?"
+   - "To avoid code duplication. All entities need audit fields like createdAt, updatedAt, and id. By putting these in a BaseEntity superclass, we follow the DRY principle."

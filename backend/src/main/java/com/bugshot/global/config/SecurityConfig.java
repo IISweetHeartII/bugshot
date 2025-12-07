@@ -62,52 +62,55 @@ public class SecurityConfig {
 
     /**
      * CORS (Cross-Origin Resource Sharing) 설정
-     * 프론트엔드와 백엔드가 다른 도메인일 때 필요
+     * - Ingest API: 모든 origin 허용 (SDK가 어디서든 에러 전송 가능)
+     * - Dashboard API: 특정 도메인만 허용 (보안)
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        // 허용할 Origin (도메인) 설정
-        configuration.setAllowedOrigins(List.of(
+        // 1. Ingest API: 모든 origin 허용 (SDK용)
+        // Sentry, LogRocket 등과 동일한 방식
+        CorsConfiguration ingestConfig = new CorsConfiguration();
+        ingestConfig.setAllowedOriginPatterns(List.of("*"));
+        ingestConfig.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        ingestConfig.setAllowedHeaders(List.of("*"));
+        ingestConfig.setAllowCredentials(false); // allowedOriginPatterns("*") 사용시 false 필요
+        ingestConfig.setMaxAge(3600L);
+        source.registerCorsConfiguration("/api/ingest/**", ingestConfig);
+
+        // 2. Dashboard API: 특정 도메인만 허용
+        CorsConfiguration dashboardConfig = new CorsConfiguration();
+        dashboardConfig.setAllowedOrigins(List.of(
             "http://localhost:3000",      // Next.js dev server
+            "http://localhost:8081",      // Backend dev server
             "http://localhost:4321",      // Astro dev server
             "https://bugshot.log8.kr",    // Production frontend
+            "https://bugshot-api.log8.kr", // Swagger UI
             "https://log8.kr"             // Blog (SDK integration)
         ));
-
-        // 허용할 HTTP 메서드
-        configuration.setAllowedMethods(List.of(
+        dashboardConfig.setAllowedMethods(List.of(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
-
-        // 허용할 헤더 (보안을 위해 구체적으로 지정)
-        configuration.setAllowedHeaders(List.of(
+        dashboardConfig.setAllowedHeaders(List.of(
             "Authorization",
             "Content-Type",
-            "X-User-Id",         // bugshot 인증 헤더
-            "X-API-Key",         // SDK API 키
+            "X-User-Id",
+            "X-API-Key",
             "X-Requested-With",
             "Accept",
             "Origin"
         ));
-
-        // 클라이언트가 접근 가능한 응답 헤더
-        configuration.setExposedHeaders(List.of(
+        dashboardConfig.setExposedHeaders(List.of(
             "Authorization",
             "Content-Type",
             "X-RateLimit-Remaining",
             "X-RateLimit-Limit"
         ));
+        dashboardConfig.setAllowCredentials(true);
+        dashboardConfig.setMaxAge(3600L);
+        source.registerCorsConfiguration("/**", dashboardConfig);
 
-        // 인증 정보 포함 허용 (쿠키, Authorization 헤더 등)
-        configuration.setAllowCredentials(true);
-
-        // Preflight 요청 캐시 시간 (1시간)
-        configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
