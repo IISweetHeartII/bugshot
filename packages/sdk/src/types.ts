@@ -9,7 +9,7 @@ export interface BugShotConfig {
   apiKey: string;
 
   /**
-   * API 엔드포인트 (기본값: https://api.bugshot.com)
+   * API 엔드포인트 (기본값: https://bugshot-api.log8.kr)
    */
   endpoint?: string;
 

@@ -63,7 +63,7 @@ BugShot.init({
   apiKey: 'your-api-key-here',
 
   // Optional
-  endpoint: 'https://api.bugshot.com', // Default
+  endpoint: 'https://bugshot-api.log8.kr', // Default
   environment: 'production', // 'development', 'staging', etc.
   release: '1.0.0', // Your app version
   enableSessionReplay: true, // Record user sessions

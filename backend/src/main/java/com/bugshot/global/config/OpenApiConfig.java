@@ -76,7 +76,7 @@ public class OpenApiConfig {
                                 .url("http://localhost:8081")
                                 .description("로컬 개발 서버"),
                         new Server()
-                                .url("https://api.bugshot.log8.kr")
+                                .url("https://bugshot-api.log8.kr")
                                 .description("프로덕션 서버")
                 ))
                 .addSecurityItem(securityRequirement)
