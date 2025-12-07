@@ -124,7 +124,7 @@ public class EmailNotificationService {
         html.append("<div class=\"detail-row\"><span class=\"detail-label\">Location:</span><span class=\"detail-value\">").append(NotificationFormatter.escapeHtml(NotificationFormatter.formatLocation(error))).append("</span></div>");
         html.append("<div class=\"detail-row\"><span class=\"detail-label\">URL:</span><span class=\"detail-value\">").append(NotificationFormatter.escapeHtml(occurrence.getUrl())).append("</span></div>");
         html.append("<div class=\"detail-row\"><span class=\"detail-label\">Browser:</span><span class=\"detail-value\">").append(NotificationFormatter.escapeHtml(occurrence.getBrowser() != null ? occurrence.getBrowser() : "Unknown")).append("</span></div>");
-        html.append("<div class=\"detail-row\"><span class=\"detail-label\">Time:</span><span class=\"detail-value\">").append(occurrence.getOccurredAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("</span></div>");
+        html.append("<div class=\"detail-row\"><span class=\"detail-label\">Time (UTC):</span><span class=\"detail-value\">").append(occurrence.getOccurredAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append(" UTC</span></div>");
         html.append("</div>");
         html.append("</div>");
 

@@ -43,7 +43,7 @@ public class WebhookNotificationStrategy implements NotificationStrategy {
                 "severity", error.getSeverity().name(),
                 "occurrenceCount", error.getOccurrenceCount(),
                 "url", occurrence.getUrl(),
-                "timestamp", occurrence.getOccurredAt().toString()
+                "timestamp", occurrence.getOccurredAt().toString() + "Z"
         );
 
         webClientBuilder.build()
@@ -68,7 +68,7 @@ public class WebhookNotificationStrategy implements NotificationStrategy {
         Map<String, Object> payload = Map.of(
                 "type", "test",
                 "message", "BugShot 웹훅 테스트",
-                "timestamp", java.time.LocalDateTime.now().toString()
+                "timestamp", java.time.LocalDateTime.now().toString() + "Z"
         );
 
         webClientBuilder.build()

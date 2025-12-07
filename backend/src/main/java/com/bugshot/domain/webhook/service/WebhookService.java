@@ -148,7 +148,7 @@ public class WebhookService {
                                 "title", title,
                                 "description", description,
                                 "color", 5814783, // Blue
-                                "timestamp", LocalDateTime.now().toString()
+                                "timestamp", LocalDateTime.now().toString() + "Z"
                         )
                 )
         );
