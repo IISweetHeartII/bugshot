@@ -86,17 +86,12 @@ export class BugShotClient {
       this.handleError(error, context);
     });
 
-    // 세션 리플레이 시작
+    // 세션 리플레이 시작 (에러 발생 시 함께 전송됨)
     if (this.config.enableSessionReplay) {
       this.sessionReplay = new SessionReplay(this.errorCapture.getSessionId());
       this.sessionReplay.start();
       log(this.config.debug!, 'Session replay started');
     }
-
-    // 페이지 언로드 시 세션 리플레이 전송
-    window.addEventListener('beforeunload', () => {
-      this.flush();
-    });
 
     this.initialized = true;
     log(this.config.debug!, 'BugShot started successfully');
@@ -180,32 +175,6 @@ export class BugShotClient {
     if (this.sessionReplay) {
       this.sessionReplay.clear();
       log(this.config.debug!, 'Session replay cleared');
-    }
-  }
-
-  /**
-   * 버퍼에 남은 데이터 즉시 전송
-   */
-  flush(): void {
-    if (this.sessionReplay && this.config.enableSessionReplay) {
-      // Beacon API로 마지막 데이터 전송
-      const payload: IngestPayload = {
-        apiKey: this.config.apiKey,
-        error: {
-          type: 'SessionEnd',
-          message: 'Session ended',
-        },
-        context: {
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-          sessionId: this.errorCapture.getSessionId(),
-          userId: this.getCurrentUserId(),  // 사용자 ID 추가
-          timestamp: new Date().toISOString(),
-        },
-      };
-
-      this.transport.sendBeacon(payload);
-      log(this.config.debug!, 'Flushed session replay data');
     }
   }
 

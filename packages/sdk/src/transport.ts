@@ -80,30 +80,4 @@ export class Transport {
       }
     }
   }
-
-  /**
-   * 페이지 언로드 시 데이터 전송
-   * fetch + keepalive 사용 (credentials 제어 가능, sendBeacon보다 안정적)
-   */
-  sendBeacon(payload: IngestPayload): boolean {
-    try {
-      // fetch with keepalive - sendBeacon보다 CORS 제어가 용이함
-      fetch(`${this.endpoint}/api/ingest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        credentials: 'omit', // CORS: 쿠키/인증 정보 제외
-        keepalive: true, // 페이지 언로드 후에도 요청 유지
-      }).catch(() => {
-        // 페이지 언로드 중이라 에러 무시
-      });
-
-      return true;
-    } catch (error) {
-      log(this.debug, 'Beacon send failed:', error);
-      return false;
-    }
-  }
 }
