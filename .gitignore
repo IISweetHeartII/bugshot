@@ -87,3 +87,10 @@ docker-data/
 *.pid
 *.seed
 *.pid.lock
+
+# ========================================
+# Binary / Windows Metadata
+# ========================================
+packages/java-sdk/bin/
+*.class
+*:Zone.Identifier
